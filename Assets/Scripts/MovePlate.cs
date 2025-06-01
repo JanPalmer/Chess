@@ -16,7 +16,7 @@ public class MovePlate : MonoBehaviour
 
     // false: movement, true: attacking another piece
     private bool _attack = false;
-    public bool Attack { get => _attack; set { _attack = value; } };
+    public bool Attack { get => _attack; set { _attack = value; } }
 
     public void Start()
     {
