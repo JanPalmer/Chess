@@ -13,8 +13,10 @@ public class Chessman : MonoBehaviour
     public int YBoard { get => _yBoard; set { _yBoard = value; } }
 
     // Variable to keep track if player is "black" or "white"
-    private string _player;
-    public string Player { get => _player; set { _player = value; } }
+    private PlayerSide _player;
+    public PlayerSide Player { get => _player; set { _player = value; } }
+
+    private ChessPieceRole _role;
 
     public SpriteLibrary spriteLibrary;
 
@@ -31,14 +33,9 @@ public class Chessman : MonoBehaviour
         this.GetComponent<SpriteRenderer>().sprite = spriteLibrary.SelectSprite(this.name);
 
         // set player
-        if (this.name.Contains("white"))
-        {
-            Player = "white";
-        }
-        else
-        {
-            Player = "black";
-        }
+        InitializePlayer();
+
+        InitializeChessPieceRole();
     }
 
     public void SetCoords()
@@ -80,9 +77,9 @@ public class Chessman : MonoBehaviour
 
     public void InitiateMovePlates()
     {
-        switch (this.name)
+        switch (_role)
         {
-            case "black_queen" or "white_queen":
+            case ChessPieceRole.Queen:
                 LineMovePlate(1, 0);
                 LineMovePlate(1, 1);
                 LineMovePlate(0, 1);
@@ -92,29 +89,33 @@ public class Chessman : MonoBehaviour
                 LineMovePlate(0, -1);
                 LineMovePlate(1, -1);
                 break;
-            case "black_knight" or "white_knight":
+            case ChessPieceRole.Knight:
                 LMovePlate();
                 break;
-            case "black_bishop" or "white_bishop":
+            case ChessPieceRole.Bishop:
                 LineMovePlate(1, 1);
                 LineMovePlate(1, -1);
                 LineMovePlate(-1, 1);
                 LineMovePlate(-1, -1);
                 break;
-            case "black_king" or "white_king":
+            case ChessPieceRole.King:
                 SurroundMovePlate();
                 break;
-            case "black_rook" or "white_rook":
+            case ChessPieceRole.Rook:
                 LineMovePlate(1, 0);
                 LineMovePlate(0, 1);
                 LineMovePlate(-1, 0);
                 LineMovePlate(0, -1);
                 break;
-            case "black_pawn":
-                PawnMovePlate(XBoard, YBoard - 1);
-                break;
-            case "white_pawn":
-                PawnMovePlate(XBoard, YBoard + 1);
+            case ChessPieceRole.Pawn:
+                if (Player == PlayerSide.Black)
+                {
+                    PawnMovePlate(XBoard, YBoard - 1);
+                }
+                else
+                {
+                    PawnMovePlate(XBoard, YBoard + 1);
+                }
                 break;
         }
     }
@@ -231,11 +232,38 @@ public class Chessman : MonoBehaviour
 
         return mpScript;
     }
+
     public MovePlate MovePlateAttackSpawn(int matrixX, int matrixY)
     {
         var mpScript = MovePlateSpawn(matrixX, matrixY);
-        mpScript.attack = true;
+        mpScript.Attack = true;
 
         return mpScript;
+    }
+
+    private void InitializePlayer()
+    {
+        if (this.name.Contains("white"))
+        {
+            Player = PlayerSide.White;
+        }
+        else
+        {
+            Player = PlayerSide.Black;
+        }
+    }
+
+    private void InitializeChessPieceRole()
+    {
+        _role = this.name switch
+        {
+            string a when a.Contains("pawn") => ChessPieceRole.Pawn,
+            string a when a.Contains("bishop") => ChessPieceRole.Bishop,
+            string a when a.Contains("knight") => ChessPieceRole.Knight,
+            string a when a.Contains("rook") => ChessPieceRole.Rook,
+            string a when a.Contains("queen") => ChessPieceRole.Queen,
+            string a when a.Contains("king") => ChessPieceRole.King,
+            _ => ChessPieceRole.Pawn,
+        };
     }
 }

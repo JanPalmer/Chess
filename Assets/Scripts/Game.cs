@@ -13,8 +13,8 @@ public class Game : MonoBehaviour
     private GameObject[] playerBlack = new GameObject[16];
     private GameObject[] playerWhite = new GameObject[16];
 
-    private string _currentPlayer = "white";
-    public string CurrentPlayer { get => _currentPlayer; set => _currentPlayer = value; }
+    private PlayerSide _currentPlayer = PlayerSide.White;
+    public PlayerSide CurrentPlayer { get => _currentPlayer; set => _currentPlayer = value; }
 
     private bool _gameOver = false;
     public bool IsGameOver => _gameOver;
@@ -48,8 +48,6 @@ public class Game : MonoBehaviour
         {
             SetPosition(piece);
         }
-
-        //Instantiate(chesspiece, new Vector3(0, 0, -1), Quaternion.identity);
     }
 
     public GameObject Create(string name, int x, int y)
@@ -95,14 +93,9 @@ public class Game : MonoBehaviour
 
     public void NextTurn()
     {
-        if (CurrentPlayer == "white")
-        {
-            CurrentPlayer = "black";
-        }
-        else
-        {
-            CurrentPlayer = "white";
-        }
+        CurrentPlayer = CurrentPlayer == PlayerSide.White
+            ? PlayerSide.Black
+            : PlayerSide.White;
     }
 
     public void Update()
@@ -115,13 +108,13 @@ public class Game : MonoBehaviour
         }
     }
 
-    public void Winner(string playerWinner)
+    public void Winner(PlayerSide playerWinner)
     {
         _gameOver = true;
 
         var text = GameObject.FindGameObjectWithTag("TextWinner").GetComponent<TextMeshProUGUI>();
         text.enabled = true;
-        text.text = playerWinner + " is the winner!";
+        text.text = playerWinner.ToString() + " is the winner!";
 
         var textRestart = GameObject.FindGameObjectWithTag("TextRestart").GetComponent<TextMeshProUGUI>();
         textRestart.enabled = true;

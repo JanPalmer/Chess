@@ -15,11 +15,12 @@ public class MovePlate : MonoBehaviour
 
 
     // false: movement, true: attacking another piece
-    public bool attack = false;
+    private bool _attack = false;
+    public bool Attack { get => _attack; set { _attack = value; } };
 
     public void Start()
     {
-        if (attack)
+        if (Attack)
         {
             // Change to red color
             gameObject.GetComponent<SpriteRenderer>().color = new Color(1.0f, 0, 0);
@@ -30,7 +31,7 @@ public class MovePlate : MonoBehaviour
     {
         controller = GameObject.FindGameObjectWithTag("GameController");
 
-        if (attack)
+        if (Attack)
         {
             // GetPosition return the chesspiece GameObject that the movePlate is set on
             GameObject chessPiece = controller.GetComponent<Game>().GetPosition(_matrixX, _matrixY);
@@ -56,8 +57,6 @@ public class MovePlate : MonoBehaviour
 
         var game = controller.GetComponent<Game>();
         game.SetPosition(_pieceReference);
-
-        //game.NextTurn();
 
         currentPiece.DestroyMovePlates();
 
