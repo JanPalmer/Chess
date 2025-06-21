@@ -34,9 +34,12 @@ public class MovePlate : MonoBehaviour
         if (Attack)
         {
             // GetPosition return the chesspiece GameObject that the movePlate is set on
-            GameObject chessPiece = controller.GetComponent<Game>().GetPosition(_matrixX, _matrixY);
+            var chessPiece = controller
+                                .GetComponent<Game>()
+                                .GetPosition(_matrixX, _matrixY)
+                                .GetComponent<Chessman>();
 
-            if (chessPiece.name.Contains("king"))
+            if (chessPiece.Role == ChessPieceRole.King)
             {
                 var winningPiece = _pieceReference.GetComponent<Chessman>();
                 controller.GetComponent<Game>().Winner(winningPiece.Player);

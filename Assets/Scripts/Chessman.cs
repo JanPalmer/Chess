@@ -19,8 +19,17 @@ public class Chessman : MonoBehaviour
     public PlayerSide Player { get => _player; set { _player = value; } }
 
     private ChessPieceRole _role;
+    public ChessPieceRole Role { get => _role; set { _role = value; } }
 
     public SpriteLibrary spriteLibrary;
+
+    public Chessman(Chessman objectToCopy)
+    {
+        XBoard = objectToCopy.XBoard;
+        YBoard = objectToCopy.YBoard;
+        Player = objectToCopy.Player;
+        Role = objectToCopy.Role;
+    }
 
     public void Activate()
     {
@@ -128,7 +137,7 @@ public class Chessman : MonoBehaviour
 
         while (sc.IsPositionOnBoard(x, y) && sc.GetPosition(x, y) == null)
         {
-            result.Add(new PossibleMove(x, y));
+            result.Add(new PossibleMove(this, x, y));
 
             x += xIncrement;
             y += yIncrement;
@@ -136,7 +145,7 @@ public class Chessman : MonoBehaviour
 
         if (sc.IsPositionOnBoard(x, y) && sc.GetPosition(x, y).GetComponent<Chessman>().Player != Player)
         {
-            result.Add(new PossibleMove(x, y, isAttack: true));
+            result.Add(new PossibleMove(this, x, y, isAttack: true));
         }
 
         return result;
@@ -199,12 +208,12 @@ public class Chessman : MonoBehaviour
 
             if (cp == null)
             {
-                possibleMove = new PossibleMove(x, y);
+                possibleMove = new PossibleMove(this, x, y);
                 return true;
             }
             else if (cp.GetComponent<Chessman>().Player != Player)
             {
-                possibleMove = new PossibleMove(x, y, isAttack: true);
+                possibleMove = new PossibleMove(this, x, y, isAttack: true);
                 return true;
             }
         }
@@ -225,7 +234,7 @@ public class Chessman : MonoBehaviour
             // Move forward
             if (cp == null)
             {
-                result.Add(new PossibleMove(x, y));
+                result.Add(new PossibleMove(this, x, y));
             }
 
             // Or attack diagonally
@@ -233,14 +242,14 @@ public class Chessman : MonoBehaviour
             && sc.GetPosition(x + 1, y) != null
             && sc.GetPosition(x + 1, y).GetComponent<Chessman>().Player != Player)
             {
-                result.Add(new PossibleMove(x + 1, y, isAttack: true));
+                result.Add(new PossibleMove(this, x + 1, y, isAttack: true));
             }
 
             if (sc.IsPositionOnBoard(x - 1, y)
             && sc.GetPosition(x - 1, y) != null
             && sc.GetPosition(x - 1, y).GetComponent<Chessman>().Player != Player)
             {
-                result.Add(new PossibleMove(x - 1, y, isAttack: true));
+                result.Add(new PossibleMove(this, x - 1, y, isAttack: true));
             }
         }
 
