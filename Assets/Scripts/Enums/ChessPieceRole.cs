@@ -1,5 +1,6 @@
 public enum ChessPieceRole
 {
+    Unknown,
     Pawn,
     Bishop,
     Rook,

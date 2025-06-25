@@ -1,10 +1,13 @@
+using Models;
 using UnityEngine;
 
-public interface IAlgorithm
+namespace Algorithms
 {
-    public (GameObject chessPieceToMove, int moveX, int moveY) CalculateNextMove(
-        PlayerSide player,
-        GameObject[,] positions,
-        GameObject[] playerBlack,
-        GameObject[] playerWhite);
+    public interface IAlgorithm
+    {
+        public PossibleMove CalculateNextMove(
+            PlayerSide player,
+            Board board,
+            int maxDepth);
+    }
 }
