@@ -22,7 +22,7 @@ namespace Components
             return new Chessman(ChessPieceInformation);
         }
 
-        public void Activate(string name, int x, int y)
+        public void Activate(string name, int x, int y, Board board)
         {
             SpriteLibrary = Controller.GetComponent<SpriteLibrary>();
 
@@ -34,6 +34,7 @@ namespace Components
                 YBoard = y,
                 Player = InitializePlayer(),
                 Role = InitializeChessPieceRole(),
+                Board = board,
             };
 
             SetCoords();
@@ -74,15 +75,20 @@ namespace Components
         {
             if (move.RemovedChessPiece != null)
             {
-                var chessPiece = ChessPieceInformation.Board.GetPosition(move.End.X, move.End.Y);
+                var game = Controller.GetComponent<Game>();
+
+                var pieceObj = game.GetChesspiece(move.End.X, move.End.Y);
+                var chessPiece = pieceObj.GetComponent<ChessmanObject>().ChessPieceInformation;
 
                 if (chessPiece.Role == ChessPieceRole.King)
                 {
-                    Controller.GetComponent<Game>().Winner(ChessPieceInformation.Player);
+                    game.Winner(ChessPieceInformation.Player);
                 }
 
-                Destroy(chessPiece);
+                game.RemoveChesspiece(pieceObj);
             }
+
+            Debug.Log($"ChessmanComponent - Moving Chesspiece {ChessPieceInformation.Player} {ChessPieceInformation.Role}");
 
             ChessPieceInformation.Board.MoveChessPiece(move);
 

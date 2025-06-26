@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Models
 {
-    public class Chessman : ScriptableObject
+    public class Chessman
     {
         /// <summary>
         /// Parent Board to which the piece belongs to
@@ -132,7 +132,7 @@ namespace Models
                 var pieceOnBoard = Board.GetPosition(x, y);
                 if (pieceOnBoard != null && pieceOnBoard.Player != Player)
                 {
-                    result.Add(new PossibleMove(this, x, y, pieceOnBoard));
+                    result.Add(new PossibleMove(this, pieceOnBoard));
                 }
             }
 
@@ -200,7 +200,7 @@ namespace Models
                 }
                 else if (pieceToRemove.Player != Player)
                 {
-                    possibleMove = new PossibleMove(this, x, y, pieceToRemove);
+                    possibleMove = new PossibleMove(this, pieceToRemove);
                     return true;
                 }
             }
@@ -228,14 +228,14 @@ namespace Models
                 && Board.GetPosition(x + 1, y) != null
                 && Board.GetPosition(x + 1, y).Player != Player)
                 {
-                    result.Add(new PossibleMove(this, x + 1, y, Board.GetPosition(x + 1, y)));
+                    result.Add(new PossibleMove(this, Board.GetPosition(x + 1, y)));
                 }
 
                 if (Board.IsPositionOnBoard(x - 1, y)
                 && Board.GetPosition(x - 1, y) != null
                 && Board.GetPosition(x - 1, y).Player != Player)
                 {
-                    result.Add(new PossibleMove(this, x - 1, y, Board.GetPosition(x - 1, y)));
+                    result.Add(new PossibleMove(this, Board.GetPosition(x - 1, y)));
                 }
             }
 

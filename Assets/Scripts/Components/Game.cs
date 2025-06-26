@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Algorithms;
 using TMPro;
 using UnityEngine;
@@ -70,26 +71,32 @@ namespace Components
 
             Console.WriteLine(name);
 
-            cm.Activate(name, x, y);
+            cm.Activate(name, x, y, _board);
 
             _board.SetPosition(cm.ChessPieceInformation, x, y);
 
             return obj;
         }
 
-        public void NextTurn()
+        public async Task NextTurn()
         {
             CurrentPlayer = CurrentPlayer == PlayerSide.White
                 ? PlayerSide.Black
                 : PlayerSide.White;
 
+            Debug.Log($"Next turn - player: {CurrentPlayer}");
+
             if (CurrentPlayer == PlayerSide.Black)
             {
                 if (_opponentAlgorithm != null)
                 {
-                    var nextMove = _opponentAlgorithm.CalculateNextMove(CurrentPlayer, _board, 1);
+                    var nextMove = _opponentAlgorithm.CalculateNextMove(CurrentPlayer, _board, 2);
                     //var pieceToMove = Board.GetPosition(nextMove.ChessPiece.XBoard, nextMove.ChessPiece.YBoard);
-                    _board.MoveChessPiece(nextMove);
+                    var pieceObj = GetChesspiece(nextMove.Start.X, nextMove.Start.Y).GetComponent<ChessmanObject>();
+
+                    pieceObj.MoveChessPiece(nextMove);
+
+                    await NextTurn();
                 }
             }
         }
@@ -106,11 +113,19 @@ namespace Components
 
         public GameObject GetChesspiece(int x, int y)
         {
-            return _chessPieces.Single((obj) =>
+            return _chessPieces.SingleOrDefault((obj) =>
             {
                 var pieceInfo = obj.GetComponent<ChessmanObject>().ChessPieceInformation;
-                return pieceInfo.XBoard == x && pieceInfo.YBoard == y;
+                return pieceInfo.XBoard == x && pieceInfo.YBoard == y && pieceInfo.IsRemoved == false;
             });
+        }
+
+        public void RemoveChesspiece(GameObject chesspiece)
+        {
+            var pieceInfo = chesspiece.GetComponent<ChessmanObject>().ChessPieceInformation;
+            _board.SetPositionEmpty(pieceInfo.XBoard, pieceInfo.YBoard);
+            _chessPieces.Remove(chesspiece);
+            Destroy(chesspiece);
         }
 
         public void Winner(PlayerSide playerWinner)

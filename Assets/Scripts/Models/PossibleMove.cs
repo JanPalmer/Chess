@@ -13,6 +13,14 @@ namespace Models
         // Don't use other constructors if the move is an attack move
         public readonly Chessman RemovedChessPiece = null;
 
+        public PossibleMove(PossibleMove moveToCopy)
+        {
+            ChessPiece = moveToCopy.ChessPiece;
+            Start = (moveToCopy.Start.X, moveToCopy.Start.Y);
+            End = (moveToCopy.End.X, moveToCopy.End.Y);
+            RemovedChessPiece = moveToCopy.RemovedChessPiece;
+        }
+
         public PossibleMove(Chessman chessPiece, int xEnd, int yEnd)
         {
             ChessPiece = chessPiece;
@@ -27,10 +35,10 @@ namespace Models
             End = (xEnd, yEnd);
         }
 
-        public PossibleMove(Chessman chessPiece, int xStart, int yStart, Chessman removedChessPiece)
+        public PossibleMove(Chessman chessPiece, Chessman removedChessPiece)
         {
             ChessPiece = chessPiece;
-            Start = (xStart, yStart);
+            Start = (chessPiece.XBoard, chessPiece.YBoard);
             End = (removedChessPiece.XBoard, removedChessPiece.YBoard);
             RemovedChessPiece = removedChessPiece;
         }

@@ -41,7 +41,7 @@ namespace Components
             pieceObj.DestroyMovePlates();
             pieceObj.MoveChessPiece(Move);
 
-            game.NextTurn();
+            game.NextTurn().ConfigureAwait(false);
         }
 
         // public void SetCoords(int x, int y)

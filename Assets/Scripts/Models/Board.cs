@@ -5,7 +5,7 @@ using Unity.Collections;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Board", menuName = "Scriptable Objects/Board")]
-public class Board : ScriptableObject
+public class Board
 {
     public Chessman[,] Positions { get; set; } = new Chessman[8, 8];
 
@@ -48,12 +48,31 @@ public class Board : ScriptableObject
 
     public Chessman MoveChessPiece(PossibleMove move)
     {
+        //Debug.Log($"Move - {move.Start.X}, {move.Start.Y} -> {move.End.X}, {move.End.Y}");
+
         SetPosition(move.ChessPiece, move.End.X, move.End.Y);
         SetPositionEmpty(move.Start.X, move.Start.Y);
 
         if (move.RemovedChessPiece != null)
         {
             move.RemovedChessPiece.IsRemoved = true;
+            //Debug.Log($"Removed {move.RemovedChessPiece.Role}");
+        }
+
+        return move.RemovedChessPiece;
+    }
+
+    public Chessman UndoMove(PossibleMove move)
+    {
+        //Debug.Log($"Undoing move - {move.Start.X}, {move.Start.Y} -> {move.End.X}, {move.End.Y}");
+
+        SetPosition(move.ChessPiece, move.Start.X, move.Start.Y);
+        SetPositionEmpty(move.End.X, move.End.Y);
+
+        if (move.RemovedChessPiece != null)
+        {
+            move.RemovedChessPiece.IsRemoved = false;
+            SetPosition(move.RemovedChessPiece, move.End.X, move.End.Y);
         }
 
         return move.RemovedChessPiece;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Components;
 using Models;
 using Unity.Collections;
@@ -27,12 +28,12 @@ namespace Algorithms
         // private List<Chessman> _playerBlack;
         // private List<Chessman> _playerWhite;
 
-        private Board _board;
-        private bool _isGameOver = false;
+        private Board _simulatedBoard;
+        private bool _isGameOver;
         private int _maxDepth;
 
-        private int _bestEvaluation = int.MinValue;
-        private PossibleMove? _bestMove = null;
+        private int _bestEvaluation;
+        private PossibleMove _bestMove;
 
 
         public PossibleMove CalculateNextMove(
@@ -46,8 +47,11 @@ namespace Algorithms
             // Add copies of pieces for evaluation
             var boardSizeX = board.Positions.GetLength(0);
             var boardSizeY = board.Positions.GetLength(1);
-            _board = new Board();
-            //_board = new Chessman[boardSizeX, boardSizeY];
+            _simulatedBoard = new Board();
+            _bestEvaluation = int.MinValue;
+            _bestMove = null;
+            _isGameOver = false;
+
             for (int y = 0; y < boardSizeY; y++)
             {
                 for (int x = 0; x < boardSizeX; x++)
@@ -55,32 +59,33 @@ namespace Algorithms
                     var chessPiece = board.GetPosition(x, y);
                     if (chessPiece != null)
                     {
-                        _board.SetPosition(new Chessman(chessPiece), x, y);
-                        //_board[x, y] = new Chessman(chessPiece);
+                        _simulatedBoard.SetPosition(new Chessman(chessPiece, _simulatedBoard), x, y);
                     }
                 }
             }
 
-            // _board.PlayerBlack = (from Chessman piece in _board where piece.Player == PlayerSide.Black select piece).ToList();
-            // _playerWhite = (from Chessman piece in _board where piece.Player == PlayerSide.White select piece).ToList();
-
-            //var result = 
-
-            // _playerBlack = new List<Chessman>();
-            // foreach (var piece in board.PlayerBlack)
-            // {
-            //     _playerBlack.Add(new Chessman(piece.GetComponent<Chessman>()));
-            // }
-
-            // _playerWhite = new List<Chessman>();
-            // foreach (var piece in playerWhite)
-            // {
-            //     _playerWhite.Add(new Chessman(piece.GetComponent<Chessman>()));
-            // }
+            Debug.Log("Starting NegaMax");
 
             NegaMax(new List<PossibleMove>());
 
-            return _bestMove!;
+            Debug.Log($"Best Move - {_bestMove.ChessPiece.Role} - {_bestMove.Start.X}, {_bestMove.Start.Y} to {_bestMove.End.X}, {_bestMove.End.Y} - Removed piece {_bestMove.RemovedChessPiece.Role}");
+            //Debug.Log($"Best Move - ");
+
+            var pieceToMove = board.GetPosition(_bestMove.Start.X, _bestMove.Start.Y);
+            var pieceToRemove = board.GetPosition(_bestMove.End.X, _bestMove.End.Y);
+
+
+            PossibleMove translatedBestMove;
+            if (pieceToRemove != null)
+            {
+                translatedBestMove = new PossibleMove(pieceToMove, pieceToRemove);
+            }
+            else
+            {
+                translatedBestMove = new PossibleMove(pieceToMove, _bestMove.End.X, _bestMove.End.Y);
+            }
+
+            return translatedBestMove;
         }
 
         private void NegaMax(List<PossibleMove> movesSoFar)
@@ -92,33 +97,49 @@ namespace Algorithms
                 var evaluationResult = Evaluate(movesSoFar);
                 if (evaluationResult > _bestEvaluation)
                 {
-                    Debug.Log($"Evaluation: {evaluationResult}");
+                    //Debug.Log($"Evaluation: {evaluationResult}");
                     _bestEvaluation = evaluationResult;
-                    _bestMove = movesSoFar.First();
+                    _bestMove = new PossibleMove(movesSoFar.First());
                 }
+
+                return;
             }
 
             //var max = int.MinValue;
 
-            var sideToEvaluate = _board.Positions.Cast<Chessman>().Where(x => x.Player == currentPlayer);
+            //Debug.Log($"Depth: {movesSoFar.Count} - Side: {currentPlayer.ToString()}");
+
+            var listOfChesspieces = _simulatedBoard.Positions.Cast<Chessman>();
+            var sideToEvaluate = listOfChesspieces.Where(x => x != null && x.Player == currentPlayer && x.IsRemoved == false).ToList();
+
+            if (sideToEvaluate == null)
+            {
+                return;
+            }
+
+            //Debug.Log("Pieces to evaluate: " + sideToEvaluate.Count());
 
             foreach (var piece in sideToEvaluate)
             {
                 var possibleMoves = piece.GetPossibleMoves();
+
+                Debug.Log($"Evaluating piece {piece.Role.ToString()} - possible moves: {possibleMoves.Count}");
 
                 foreach (var move in possibleMoves)
                 {
                     MakeMove(move);
                     movesSoFar.Add(move);
 
-                    Debug.Log(movesSoFar.Count);
-
-                    System.Threading.Thread.Sleep(50);
+                    //Debug.Log($"Added move {movesSoFar.Count}");
 
                     NegaMax(movesSoFar);
 
+                    //if (_bestMove != null) return;
+
                     movesSoFar.RemoveAt(movesSoFar.Count - 1);
                     UndoMove(move);
+
+                    //Debug.Log($"Undoing move {movesSoFar.Count}");
                 }
             }
         }
@@ -145,19 +166,17 @@ namespace Algorithms
                 _isGameOver = true;
             }
 
-            _board.SetPosition(move.ChessPiece, move.End.X, move.End.Y);
+            _simulatedBoard.MoveChessPiece(move);
         }
 
         private void UndoMove(PossibleMove move)
         {
             if (move.RemovedChessPiece != null && move.RemovedChessPiece.Role == ChessPieceRole.King)
             {
-                _isGameOver = true;
+                _isGameOver = false;
             }
 
-            move.ChessPiece.XBoard = move.Start.X;
-            move.ChessPiece.YBoard = move.Start.Y;
-            _board.SetPosition(move.RemovedChessPiece, move.End.X, move.End.Y);
+            _simulatedBoard.UndoMove(move);
         }
 
         // private List<PossibleMove> GetAvailableMoves(IEnumerable<Chessman> chessPieces)
