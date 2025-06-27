@@ -11,6 +11,7 @@ using UnityEngine;
 
 namespace Algorithms
 {
+    // Negamax with Alpha-beta pruning
     public class NegamaxAlgorithm : IAlgorithm
     {
         private Dictionary<ChessPieceRole, int> _pieceValues = new Dictionary<ChessPieceRole, int>()
