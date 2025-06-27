@@ -68,7 +68,11 @@ namespace Algorithms
 
             NegaMax(new List<PossibleMove>());
 
-            Debug.Log($"Best Move - {_bestMove.ChessPiece.Role} - {_bestMove.Start.X}, {_bestMove.Start.Y} to {_bestMove.End.X}, {_bestMove.End.Y} - Removed piece {_bestMove.RemovedChessPiece.Role}");
+            if (_bestMove == null)
+            {
+                Debug.Log("No best move found");
+            }
+
             //Debug.Log($"Best Move - ");
 
             var pieceToMove = board.GetPosition(_bestMove.Start.X, _bestMove.Start.Y);
@@ -78,10 +82,12 @@ namespace Algorithms
             PossibleMove translatedBestMove;
             if (pieceToRemove != null)
             {
+                Debug.Log($"Best Move - {_bestMove.ChessPiece.Role} - {_bestMove.Start.X}, {_bestMove.Start.Y} to {_bestMove.End.X}, {_bestMove.End.Y} - Removed piece {_bestMove.RemovedChessPiece.Role}");
                 translatedBestMove = new PossibleMove(pieceToMove, pieceToRemove);
             }
             else
             {
+                Debug.Log($"Best Move - {_bestMove.ChessPiece.Role} - {_bestMove.Start.X}, {_bestMove.Start.Y} to {_bestMove.End.X}, {_bestMove.End.Y}");
                 translatedBestMove = new PossibleMove(pieceToMove, _bestMove.End.X, _bestMove.End.Y);
             }
 
@@ -105,8 +111,6 @@ namespace Algorithms
                 return;
             }
 
-            //var max = int.MinValue;
-
             //Debug.Log($"Depth: {movesSoFar.Count} - Side: {currentPlayer.ToString()}");
 
             var listOfChesspieces = _simulatedBoard.Positions.Cast<Chessman>();
@@ -114,6 +118,7 @@ namespace Algorithms
 
             if (sideToEvaluate == null)
             {
+                //Debug.Log("Nothing to evaluate");
                 return;
             }
 
@@ -123,7 +128,7 @@ namespace Algorithms
             {
                 var possibleMoves = piece.GetPossibleMoves();
 
-                Debug.Log($"Evaluating piece {piece.Role.ToString()} - possible moves: {possibleMoves.Count}");
+                //Debug.Log($"Evaluating piece {piece.Role.ToString()} - possible moves: {possibleMoves.Count}");
 
                 foreach (var move in possibleMoves)
                 {
@@ -150,7 +155,12 @@ namespace Algorithms
 
             foreach (var move in moves)
             {
-                var chesspieceRole = move.RemovedChessPiece?.Role ?? ChessPieceRole.Unknown;
+                var chesspieceRole = ChessPieceRole.Unknown;
+                if (move.RemovedChessPiece != null)
+                {
+                    chesspieceRole = move.RemovedChessPiece.Role;
+                }
+
                 var modifier = (move.ChessPiece.Player == _originalPlayer) ? 1 : -1;
                 result += modifier * _pieceValues[chesspieceRole];
             }
