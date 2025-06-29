@@ -101,9 +101,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 118e9d0f6f8509644b961fdbf9551064, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  controller: {fileID: 0}
-  movePlate: {fileID: 3646249680964849565, guid: 4b4f2490533357d4d8ec91a0a7033406, type: 3}
-  spriteLibrary: {fileID: 0}
+  MovePlate: {fileID: 3646249680964849565, guid: 4b4f2490533357d4d8ec91a0a7033406, type: 3}
+  ChessPieceInformation: {fileID: 0}
+  SpriteLibrary: {fileID: 0}
 --- !u!61 &3140085139406795466
 BoxCollider2D:
   m_ObjectHideFlags: 0
