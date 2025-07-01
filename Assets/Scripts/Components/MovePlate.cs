@@ -35,6 +35,11 @@ namespace Components
 
         public void OnMouseUp()
         {
+            if (Move == null)
+            {
+                return;
+            }
+
             var game = GameObject.FindGameObjectWithTag("GameController").GetComponent<Game>();
 
             var pieceObj = game.GetChesspiece(Move.Start.X, Move.Start.Y).GetComponent<ChessmanObject>();

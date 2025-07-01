@@ -1,5 +1,8 @@
-public enum PlayerSide
+namespace Enums
 {
-    White,
-    Black,
+    public enum PlayerSide
+    {
+        White,
+        Black,
+    }
 }

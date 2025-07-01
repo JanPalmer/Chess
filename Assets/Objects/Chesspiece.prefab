@@ -102,7 +102,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MovePlate: {fileID: 3646249680964849565, guid: 4b4f2490533357d4d8ec91a0a7033406, type: 3}
-  ChessPieceInformation: {fileID: 0}
+  MovePlateOrange: {fileID: 214587722747925653, guid: 776ed88f9eb3c694b897ba8e05c63b7a, type: 3}
+  MovePlateBlue: {fileID: 1662871912667771742, guid: c61558ef65b4bce4686102a9e6253c73, type: 3}
   SpriteLibrary: {fileID: 0}
 --- !u!61 &3140085139406795466
 BoxCollider2D:

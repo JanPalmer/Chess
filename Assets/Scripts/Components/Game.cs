@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Algorithms;
+using Enums;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -91,7 +92,6 @@ namespace Components
                 if (_opponentAlgorithm != null)
                 {
                     var nextMove = _opponentAlgorithm.CalculateNextMove(CurrentPlayer, _board, 4);
-                    //var pieceToMove = Board.GetPosition(nextMove.ChessPiece.XBoard, nextMove.ChessPiece.YBoard);
                     var pieceObj = GetChesspiece(nextMove.Start.X, nextMove.Start.Y).GetComponent<ChessmanObject>();
 
                     pieceObj.MoveChessPiece(nextMove);

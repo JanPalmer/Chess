@@ -1,10 +1,13 @@
-public enum ChessPieceRole
+namespace Enums
 {
-    Unknown,
-    Pawn,
-    Bishop,
-    Rook,
-    Knight,
-    Queen,
-    King,
+    public enum ChessPieceRole
+    {
+        Unknown,
+        Pawn,
+        Bishop,
+        Rook,
+        Knight,
+        Queen,
+        King,
+    }
 }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Components;
+using Enums;
 using UnityEngine;
 
 namespace Models
@@ -34,6 +35,19 @@ namespace Models
         /// Marks the piece as removed
         /// </summary>
         public bool IsRemoved { get; set; } = false;
+
+
+        // Tank stats
+
+        public uint Health { get; set; }
+
+        public uint Movement { get; set; }
+
+        public uint Firepower { get; set; }
+
+        public uint Survivability { get; set; }
+
+
 
         #region Constructors
 
