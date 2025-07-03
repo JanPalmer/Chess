@@ -76,18 +76,20 @@ namespace Algorithms
 
 
             PossibleMove translatedBestMove;
-            if (pieceToRemove != null)
-            {
-                Debug.Log($"Best Move - {_bestMove.ChessPiece.Role} - {_bestMove.Start.X}, {_bestMove.Start.Y} to {_bestMove.End.X}, {_bestMove.End.Y} - Removed piece {_bestMove.RemovedChessPiece.Role}");
-                translatedBestMove = new PossibleMove(pieceToMove, pieceToRemove);
-            }
-            else
-            {
-                Debug.Log($"Best Move - {_bestMove.ChessPiece.Role} - {_bestMove.Start.X}, {_bestMove.Start.Y} to {_bestMove.End.X}, {_bestMove.End.Y}");
-                translatedBestMove = new PossibleMove(pieceToMove, _bestMove.End.X, _bestMove.End.Y);
-            }
+            // if (pieceToRemove != null)
+            // {
+            //     Debug.Log($"Best Move - {_bestMove.ChessPiece.Role} - {_bestMove.Start.X}, {_bestMove.Start.Y} to {_bestMove.End.X}, {_bestMove.End.Y} - Removed piece {_bestMove.RemovedChessPiece.Role}");
+            //     translatedBestMove = new PossibleMove(pieceToMove, pieceToRemove);
+            // }
+            // else
+            // {
+            // Debug.Log($"Best Move - {_bestMove.ChessPiece.Role} - {_bestMove.Start.X}, {_bestMove.Start.Y} to {_bestMove.End.X}, {_bestMove.End.Y}");
+            // translatedBestMove = new PossibleMove(pieceToMove, _bestMove.End.X, _bestMove.End.Y, new List<ChessPieceDirection>(_bestMove.Directions));
+            // //}
 
-            return translatedBestMove;
+            //return translatedBestMove;
+
+            return null;
         }
 
         private void NegaMax(List<PossibleMove> movesSoFar)
@@ -172,7 +174,7 @@ namespace Algorithms
                 _isGameOver = true;
             }
 
-            _simulatedBoard.MoveChessPiece(move);
+            //_simulatedBoard.MoveChessPiece(move);
         }
 
         private void UndoMove(PossibleMove move)

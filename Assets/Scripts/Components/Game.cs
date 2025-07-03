@@ -40,16 +40,23 @@ namespace Components
 
             _board = new Board();
 
-            _chessPieces = new List<GameObject>{
-                Create("white_rook", 0, 0), Create("white_knight", 1, 0), Create("white_bishop", 2, 0), Create("white_queen", 3, 0),
-                Create("white_king", 4, 0), Create("white_bishop", 5, 0), Create("white_knight", 6, 0), Create("white_rook", 7, 0),
-                Create("white_pawn", 0, 1), Create("white_pawn", 1, 1), Create("white_pawn", 2, 1), Create("white_pawn", 3, 1),
-                Create("white_pawn", 4, 1), Create("white_pawn", 5, 1), Create("white_pawn", 6, 1), Create("white_pawn", 7, 1),
+            // normal chess
+            // _chessPieces = new List<GameObject>{
+            //     Create("white_rook", 0, 0), Create("white_knight", 1, 0), Create("white_bishop", 2, 0), Create("white_queen", 3, 0),
+            //     Create("white_king", 4, 0), Create("white_bishop", 5, 0), Create("white_knight", 6, 0), Create("white_rook", 7, 0),
+            //     Create("white_pawn", 0, 1), Create("white_pawn", 1, 1), Create("white_pawn", 2, 1), Create("white_pawn", 3, 1),
+            //     Create("white_pawn", 4, 1), Create("white_pawn", 5, 1), Create("white_pawn", 6, 1), Create("white_pawn", 7, 1),
 
-                Create("black_rook", 0, 7), Create("black_knight", 1, 7), Create("black_bishop", 2, 7), Create("black_queen", 3, 7),
-                Create("black_king", 4, 7), Create("black_bishop", 5, 7), Create("black_knight", 6, 7), Create("black_rook", 7, 7),
-                Create("black_pawn", 0, 6), Create("black_pawn", 1, 6), Create("black_pawn", 2, 6), Create("black_pawn", 3, 6),
-                Create("black_pawn", 4, 6), Create("black_pawn", 5, 6), Create("black_pawn", 6, 6), Create("black_pawn", 7, 6),
+            //     Create("black_rook", 0, 7), Create("black_knight", 1, 7), Create("black_bishop", 2, 7), Create("black_queen", 3, 7),
+            //     Create("black_king", 4, 7), Create("black_bishop", 5, 7), Create("black_knight", 6, 7), Create("black_rook", 7, 7),
+            //     Create("black_pawn", 0, 6), Create("black_pawn", 1, 6), Create("black_pawn", 2, 6), Create("black_pawn", 3, 6),
+            //     Create("black_pawn", 4, 6), Create("black_pawn", 5, 6), Create("black_pawn", 6, 6), Create("black_pawn", 7, 6),
+            // };
+
+            _chessPieces = new List<GameObject>{
+                Create("white_rook", 0, 0),  Create("white_pawn", 1, 1), Create("white_pawn", 3, 1),
+
+                Create("black_rook", 0, 7),  Create("black_pawn", 1, 6), Create("black_pawn", 3, 6),
             };
 
             // foreach (var piece in playerWhite)
@@ -68,13 +75,13 @@ namespace Components
         public GameObject Create(string name, int x, int y)
         {
             GameObject obj = Instantiate(chesspiece, new Vector3(0, 0, -1), Quaternion.identity);
-            ChessmanObject cm = obj.GetComponent<ChessmanObject>();
+            ChessmanComponent cm = obj.GetComponent<ChessmanComponent>();
 
             Console.WriteLine(name);
 
             cm.Activate(name, x, y, _board);
 
-            _board.SetPosition(cm.ChessPieceInformation, x, y);
+            _board.SetPosition(cm.ChessPieceInfo, x, y);
 
             return obj;
         }
@@ -91,10 +98,10 @@ namespace Components
             {
                 if (_opponentAlgorithm != null)
                 {
-                    var nextMove = _opponentAlgorithm.CalculateNextMove(CurrentPlayer, _board, 4);
-                    var pieceObj = GetChesspiece(nextMove.Start.X, nextMove.Start.Y).GetComponent<ChessmanObject>();
+                    // var nextMove = _opponentAlgorithm.CalculateNextMove(CurrentPlayer, _board, 4);
+                    // var pieceObj = GetChesspiece(nextMove.Start.X, nextMove.Start.Y).GetComponent<ChessmanComponent>();
 
-                    pieceObj.MoveChessPiece(nextMove);
+                    // pieceObj.MoveChessPiece(nextMove);
 
                     await NextTurn();
                 }
@@ -115,14 +122,14 @@ namespace Components
         {
             return _chessPieces.SingleOrDefault((obj) =>
             {
-                var pieceInfo = obj.GetComponent<ChessmanObject>().ChessPieceInformation;
+                var pieceInfo = obj.GetComponent<ChessmanComponent>().ChessPieceInfo;
                 return pieceInfo.XBoard == x && pieceInfo.YBoard == y && pieceInfo.IsRemoved == false;
             });
         }
 
         public void RemoveChesspiece(GameObject chesspiece)
         {
-            var pieceInfo = chesspiece.GetComponent<ChessmanObject>().ChessPieceInformation;
+            var pieceInfo = chesspiece.GetComponent<ChessmanComponent>().ChessPieceInfo;
             _board.SetPositionEmpty(pieceInfo.XBoard, pieceInfo.YBoard);
             _chessPieces.Remove(chesspiece);
             Destroy(chesspiece);

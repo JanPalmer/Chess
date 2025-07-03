@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Components;
+using Enums;
 using Models;
 using Unity.Collections;
 using UnityEngine;
@@ -22,7 +23,7 @@ public class Board
 
     public void SetPosition(GameObject obj, int x, int y)
     {
-        var chesspiece = obj.GetComponent<ChessmanObject>().ChessPieceInformation;
+        var chesspiece = obj.GetComponent<ChessmanComponent>().ChessPieceInfo;
         SetPosition(chesspiece, x, y);
     }
 
@@ -46,7 +47,7 @@ public class Board
         return true;
     }
 
-    public Chessman MoveChessPiece(PossibleMove move)
+    public Chessman MoveChessPiece(PossibleMove move, ChessPieceDirection direction)
     {
         //Debug.Log($"Move - {move.Start.X}, {move.Start.Y} -> {move.End.X}, {move.End.Y}");
 
@@ -58,6 +59,8 @@ public class Board
             move.RemovedChessPiece.IsRemoved = true;
             //Debug.Log($"Removed {move.RemovedChessPiece.Role}");
         }
+
+        move.ChessPiece.Direction = direction;
 
         return move.RemovedChessPiece;
     }

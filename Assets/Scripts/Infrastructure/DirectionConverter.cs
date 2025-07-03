@@ -7,21 +7,21 @@ public static class DirectionConverter
         switch (direction)
         {
             case ChessPieceDirection.Up:
-                return (1, 0);
+                return (0, 1);
             case ChessPieceDirection.UpperRight:
                 return (1, 1);
             case ChessPieceDirection.Right:
-                return (0, 1);
+                return (1, 0);
             case ChessPieceDirection.LowerRight:
-                return (-1, 1);
+                return (1, -1);
             case ChessPieceDirection.Down:
-                return (-1, 0);
+                return (0, -1);
             case ChessPieceDirection.LowerLeft:
                 return (-1, -1);
             case ChessPieceDirection.Left:
-                return (0, -1);
+                return (-1, 0);
             case ChessPieceDirection.UpperLeft:
-                return (1, -1);
+                return (-1, 1);
             default:
                 return (0, 0);
         }

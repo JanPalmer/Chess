@@ -5,7 +5,7 @@ namespace Components
 {
     public class MovePlate : MonoBehaviour
     {
-        public GameObject controller = null!;
+        public GameObject controller = null;
 
         // private GameObject _pieceReference = null!;
         // public GameObject PieceReference { get => _pieceReference; set { _pieceReference = value; } }
@@ -17,36 +17,19 @@ namespace Components
         // public int MatrixY { get => _matrixY; set { _matrixY = value; } }
 
 
-        // false: movement, true: attacking another piece
-        private bool _attack = false;
-        public bool Attack { get => _attack; set { _attack = value; } }
+        public PossibleMove Move { get; set; } = null;
 
-        private PossibleMove _move = null!;
-        public PossibleMove Move { get => _move; set { _move = value; } }
+        public float Depth { get; set; } = 1;
 
         public void Start()
         {
-            if (Attack)
+            if (Move != null && Move.RemovedChessPiece != null)
             {
                 // Change to red color
                 gameObject.GetComponent<SpriteRenderer>().color = new Color(1.0f, 0, 0);
-            }
-        }
-
-        public void OnMouseUp()
-        {
-            if (Move == null)
-            {
                 return;
             }
 
-            var game = GameObject.FindGameObjectWithTag("GameController").GetComponent<Game>();
-
-            var pieceObj = game.GetChesspiece(Move.Start.X, Move.Start.Y).GetComponent<ChessmanObject>();
-            pieceObj.DestroyMovePlates();
-            pieceObj.MoveChessPiece(Move);
-
-            game.NextTurn().ConfigureAwait(false);
         }
 
         // public void SetCoords(int x, int y)
