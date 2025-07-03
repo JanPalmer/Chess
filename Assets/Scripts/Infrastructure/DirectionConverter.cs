@@ -2,25 +2,25 @@ using Enums;
 
 public static class DirectionConverter
 {
-    public static (int X, int Y) Convert(ChessPieceDirection direction)
+    public static (int X, int Y) Convert(UnitDirection direction)
     {
         switch (direction)
         {
-            case ChessPieceDirection.Up:
+            case UnitDirection.Up:
                 return (0, 1);
-            case ChessPieceDirection.UpperRight:
+            case UnitDirection.UpperRight:
                 return (1, 1);
-            case ChessPieceDirection.Right:
+            case UnitDirection.Right:
                 return (1, 0);
-            case ChessPieceDirection.LowerRight:
+            case UnitDirection.LowerRight:
                 return (1, -1);
-            case ChessPieceDirection.Down:
+            case UnitDirection.Down:
                 return (0, -1);
-            case ChessPieceDirection.LowerLeft:
+            case UnitDirection.LowerLeft:
                 return (-1, -1);
-            case ChessPieceDirection.Left:
+            case UnitDirection.Left:
                 return (-1, 0);
-            case ChessPieceDirection.UpperLeft:
+            case UnitDirection.UpperLeft:
                 return (-1, 1);
             default:
                 return (0, 0);

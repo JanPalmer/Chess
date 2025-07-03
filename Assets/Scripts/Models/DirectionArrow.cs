@@ -3,7 +3,7 @@ using Models;
 
 public class DirectionArrow
 {
-    public ChessPieceDirection Direction { get; set; } = ChessPieceDirection.Right;
+    public UnitDirection Direction { get; set; } = UnitDirection.Right;
 
     public PossibleMove Move { get; set; }
 

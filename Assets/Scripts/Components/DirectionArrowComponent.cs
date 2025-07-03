@@ -21,9 +21,9 @@ public class DirectionArrowComponent : MonoBehaviour
 
     public void Start()
     {
-        var brightness = (float)Math.Cos(1 / ArrowInfo.Depth);
+        var brightness = (float)Math.Sin(1.0f / ArrowInfo.Depth) + 0.1f;
         this.GetComponent<SpriteRenderer>().color = new Color(brightness, brightness, brightness);
-        Debug.Log($"Arrow brightness = {brightness}");
+        Debug.Log($"Arrow brightness = {brightness}, depth = {ArrowInfo.Depth}");
     }
 
     public void OnMouseUp()

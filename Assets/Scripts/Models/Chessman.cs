@@ -10,6 +10,8 @@ namespace Models
 {
     public class Chessman
     {
+        public const float MovementDistance = 1.5f;
+
         /// <summary>
         /// Parent Board to which the piece belongs to
         /// </summary>
@@ -50,7 +52,7 @@ namespace Models
 
         public uint Survivability { get; set; }
 
-        public ChessPieceDirection Direction { get; set; } = ChessPieceDirection.Up;
+        public UnitDirection Direction { get; set; } = UnitDirection.Up;
 
 
 
@@ -143,41 +145,35 @@ namespace Models
         }
 
         public List<PossibleMove> LineMovePattern(
+            int xStart,
+            int yStart,
             int xIncrement,
             int yIncrement,
-            IEnumerable<ChessPieceDirection> directions,
-            int movementRadius)
+            IEnumerable<UnitDirection> directions,
+            float movementRadius)
         {
-            int x = XBoard + xIncrement;
-            int y = YBoard + yIncrement;
+            int x = xStart + xIncrement;
+            int y = yStart + yIncrement;
 
             var result = new List<PossibleMove>();
 
+            // Helper function to determine distance from starting position
             float DistanceFromSource()
             {
-                var xDist = x - XBoard;
-                var yDist = y - YBoard;
+                var xDist = x - xStart;
+                var yDist = y - yStart;
                 return (float)Math.Sqrt(xDist * xDist + yDist * yDist);
             }
 
-            while (DistanceFromSource() <= movementRadius
-                && Board.IsPositionOnBoard(x, y)
-                && Board.GetPosition(x, y) == null)
+            while (Board.IsPositionOnBoard(x, y)
+                && Board.GetPosition(x, y) == null
+                && DistanceFromSource() <= movementRadius)
             {
                 result.Add(new PossibleMove(this, x, y, directions));
 
                 x += xIncrement;
                 y += yIncrement;
             }
-
-            // if (Board.IsPositionOnBoard(x, y))
-            // {
-            //     var pieceOnBoard = Board.GetPosition(x, y);
-            //     if (pieceOnBoard != null && pieceOnBoard.Player != Player)
-            //     {
-            //         result.Add(new PossibleMove(this, pieceOnBoard, directions));
-            //     }
-            // }
 
             return result;
         }
@@ -263,20 +259,30 @@ namespace Models
 
             foreach (var direction in directions)
             {
+                //Debug.Log($"Direction - {direction.Move.End.X}, {direction.Move.End.Y}, {direction.Direction}");
+
                 var nextDepthMoves = SingleMovePattern(direction.Move.End.X, direction.Move.End.Y, direction.Direction);
                 var nextDepthDirections = nextDepthMoves.SelectMany(x => x.Directions).ToList();
                 foreach (var arrow in nextDepthDirections)
                 {
-                    if (directions.Any(x => x.Move.End.X == arrow.Move.End.X && x.Move.End.Y == arrow.Move.End.Y && x.Direction == arrow.Direction))
+                    //Debug.Log($"Next Depth Direction - {arrow.Move.End.X}, {arrow.Move.End.Y}, {arrow.Direction}");
+                    var possibleSameMove = directions.FirstOrDefault(x => x.Move.End.X == arrow.Move.End.X && x.Move.End.Y == arrow.Move.End.Y);
+                    if (possibleSameMove != null)
                     {
-                        continue;
+                        if (possibleSameMove.Move.Directions.Select(x => x.Direction == arrow.Direction) != null)
+                        {
+                            continue;
+                        }
+                        arrow.Move = possibleSameMove.Move;
+                        possibleSameMove.Move.Directions.Add(arrow);
                     }
                     else
                     {
-                        arrow.Depth = 2;
-                        arrow.Move.PrecedingMoves.Add(direction.Move);
-                        resultArrows.Add(arrow);
                     }
+
+                    resultArrows.Add(arrow);
+                    arrow.Move.PrecedingMoves.Add(direction);
+                    arrow.Depth = 2;
                 }
             }
 
@@ -287,114 +293,108 @@ namespace Models
             return resultMoves;
         }
 
-        public List<PossibleMove> SingleMovePattern(int xStart, int yStart, ChessPieceDirection directionStart)
+        public List<PossibleMove> SingleMovePattern(int xStart, int yStart, UnitDirection directionStart)
         {
             var result = new List<PossibleMove>();
 
             var vector = DirectionConverter.Convert(directionStart);
-            List<PossibleMove> moves;
-            List<Vector2> directions;
+            List<(Vector2 vector, List<UnitDirection> directions)> directionsForward;
+            (Vector2 vector, List<UnitDirection> directions) directionBackward;
 
             switch (vector)
             {
                 case (0, 1):
-                    Debug.Log("Up");
-                    moves = new List<PossibleMove>
+                    //Debug.Log("Up");
+                    directionsForward = new List<(Vector2, List<UnitDirection>)>()
                     {
-                        new PossibleMove(this, xStart + 0, yStart + 1, new List<ChessPieceDirection>(){ ChessPieceDirection.Up, ChessPieceDirection.UpperLeft, ChessPieceDirection.UpperRight }),
-                        new PossibleMove(this, xStart + 0, yStart + 2, new List<ChessPieceDirection>(){ ChessPieceDirection.Up, ChessPieceDirection.UpperLeft, ChessPieceDirection.UpperRight }),
-                        new PossibleMove(this, xStart + 1, yStart + 1, new List<ChessPieceDirection>(){ ChessPieceDirection.UpperRight, ChessPieceDirection.Right }),
-                        new PossibleMove(this, xStart + -1, yStart + 1, new List<ChessPieceDirection>(){ ChessPieceDirection.UpperLeft, ChessPieceDirection.Left }),
-                        new PossibleMove(this, xStart + 0, yStart - 1, new List<ChessPieceDirection>(){ChessPieceDirection.Up, ChessPieceDirection.UpperLeft, ChessPieceDirection.UpperRight }),
+                        ( new Vector2(1, 1), new List<UnitDirection>(){ UnitDirection.UpperRight, UnitDirection.Right } ),
+                        ( new Vector2(0, 1), new List<UnitDirection>(){ UnitDirection.Up, UnitDirection.UpperLeft, UnitDirection.UpperRight } ),
+                        ( new Vector2(-1, 1), new List<UnitDirection>(){ UnitDirection.UpperLeft, UnitDirection.Left } ),
                     };
+                    directionBackward = (new Vector2(0, -1), new List<UnitDirection>() { UnitDirection.Up, UnitDirection.UpperLeft, UnitDirection.UpperRight });
                     break;
                 case (0, -1):
-                    Debug.Log("Down");
-                    moves = new List<PossibleMove>
+                    //Debug.Log("Down");
+                    directionsForward = new List<(Vector2, List<UnitDirection>)>()
                     {
-                        new PossibleMove(this, xStart + 0, yStart + -1, new List<ChessPieceDirection>(){ ChessPieceDirection.Down, ChessPieceDirection.LowerLeft, ChessPieceDirection.LowerRight }),
-                        new PossibleMove(this, xStart + 0, yStart + -2, new List<ChessPieceDirection>(){ ChessPieceDirection.Down, ChessPieceDirection.LowerLeft, ChessPieceDirection.LowerRight }),
-                        new PossibleMove(this, xStart + -1, yStart + -1, new List<ChessPieceDirection>(){ ChessPieceDirection.LowerLeft, ChessPieceDirection.Left }),
-                        new PossibleMove(this, xStart + 1, yStart + -1, new List<ChessPieceDirection>(){ ChessPieceDirection.LowerRight, ChessPieceDirection.Right }),
-                        new PossibleMove(this, xStart + 0, yStart + 1, new List<ChessPieceDirection>(){ ChessPieceDirection.Down, ChessPieceDirection.LowerLeft, ChessPieceDirection.LowerRight }),
+                        ( new Vector2(1, -1), new List<UnitDirection>(){ UnitDirection.LowerRight, UnitDirection.Right } ),
+                        ( new Vector2(0, -1), new List<UnitDirection>(){ UnitDirection.Down, UnitDirection.LowerLeft, UnitDirection.LowerRight } ),
+                        ( new Vector2(-1, -1), new List<UnitDirection>(){ UnitDirection.LowerLeft, UnitDirection.Left } ),
                     };
+                    directionBackward = (new Vector2(0, 1), new List<UnitDirection>() { UnitDirection.Down, UnitDirection.LowerLeft, UnitDirection.LowerRight });
                     break;
                 case (1, 0):
-                    Debug.Log("Right");
-                    moves = new List<PossibleMove>
+                    //Debug.Log("Right");
+                    directionsForward = new List<(Vector2, List<UnitDirection>)>()
                     {
-                        new PossibleMove(this, xStart + 1, yStart + 0, new List<ChessPieceDirection>(){ ChessPieceDirection.Right, ChessPieceDirection.UpperRight, ChessPieceDirection.LowerRight }),
-                        new PossibleMove(this, xStart + 2, yStart + 0, new List<ChessPieceDirection>(){ ChessPieceDirection.Right, ChessPieceDirection.UpperRight, ChessPieceDirection.LowerRight }),
-                        new PossibleMove(this, xStart + 1, yStart + 1, new List<ChessPieceDirection>(){ ChessPieceDirection.UpperRight, ChessPieceDirection.Up }),
-                        new PossibleMove(this, xStart + 1, yStart + -1, new List<ChessPieceDirection>(){ ChessPieceDirection.LowerRight, ChessPieceDirection.Down }),
-                        new PossibleMove(this, xStart + -1, yStart + 0, new List<ChessPieceDirection>(){ ChessPieceDirection.Right, ChessPieceDirection.UpperRight, ChessPieceDirection.LowerRight }),
+                        ( new Vector2(1, 1), new List<UnitDirection>(){ UnitDirection.UpperRight, UnitDirection.Up } ),
+                        ( new Vector2(1, 0), new List<UnitDirection>(){ UnitDirection.Right, UnitDirection.UpperRight, UnitDirection.LowerRight } ),
+                        ( new Vector2(1, -1), new List<UnitDirection>(){ UnitDirection.LowerRight, UnitDirection.Down } ),
                     };
+                    directionBackward = (new Vector2(-1, 0), new List<UnitDirection>() { UnitDirection.Right, UnitDirection.UpperRight, UnitDirection.LowerRight });
                     break;
                 case (-1, 0):
-                    Debug.Log("Left");
-                    moves = new List<PossibleMove>
+                    //Debug.Log("Left");
+                    directionsForward = new List<(Vector2, List<UnitDirection>)>()
                     {
-                        new PossibleMove(this, xStart + -1, yStart + 0, new List<ChessPieceDirection>(){ ChessPieceDirection.Left, ChessPieceDirection.UpperLeft, ChessPieceDirection.LowerLeft }),
-                        new PossibleMove(this, xStart + -2, yStart + 0, new List<ChessPieceDirection>(){ ChessPieceDirection.Left, ChessPieceDirection.UpperLeft, ChessPieceDirection.LowerLeft }),
-                        new PossibleMove(this, xStart + -1, yStart + -1, new List<ChessPieceDirection>(){ ChessPieceDirection.LowerLeft, ChessPieceDirection.Down }),
-                        new PossibleMove(this, xStart + -1, yStart + 1, new List<ChessPieceDirection>(){ ChessPieceDirection.UpperLeft, ChessPieceDirection.Up }),
-                        new PossibleMove(this, xStart + 1, yStart + 0, new List<ChessPieceDirection>(){ ChessPieceDirection.Left, ChessPieceDirection.UpperLeft, ChessPieceDirection.LowerLeft }),
+                        ( new Vector2(-1, 1), new List<UnitDirection>(){ UnitDirection.UpperLeft, UnitDirection.Up } ),
+                        ( new Vector2(-1, 0), new List<UnitDirection>(){ UnitDirection.Left, UnitDirection.UpperLeft, UnitDirection.LowerLeft } ),
+                        ( new Vector2(-1, -1), new List<UnitDirection>(){ UnitDirection.LowerLeft, UnitDirection.Down } ),
                     };
+                    directionBackward = (new Vector2(1, 0), new List<UnitDirection>() { UnitDirection.Left, UnitDirection.UpperLeft, UnitDirection.LowerLeft });
                     break;
                 case (1, 1):
-                    Debug.Log("UpperRight");
-                    moves = new List<PossibleMove>
+                    //Debug.Log("UpperRight");
+                    directionsForward = new List<(Vector2, List<UnitDirection>)>()
                     {
-                        new PossibleMove(this, xStart + 1, yStart + 1, new List<ChessPieceDirection>(){ ChessPieceDirection.Up, ChessPieceDirection.UpperRight, ChessPieceDirection.Right }),
-                        new PossibleMove(this, xStart + 0, yStart + 1, new List<ChessPieceDirection>(){ ChessPieceDirection.UpperLeft, ChessPieceDirection.Up }),
-                        new PossibleMove(this, xStart + 1, yStart + 0, new List<ChessPieceDirection>(){ ChessPieceDirection.Right, ChessPieceDirection.LowerRight }),
-                        new PossibleMove(this, xStart + -1, yStart + -1, new List<ChessPieceDirection>(){ ChessPieceDirection.Up, ChessPieceDirection.UpperRight, ChessPieceDirection.Right }),
+                        ( new Vector2(0, 1), new List<UnitDirection>(){ UnitDirection.UpperLeft, UnitDirection.Up } ),
+                        ( new Vector2(1, 1), new List<UnitDirection>(){ UnitDirection.Up, UnitDirection.UpperRight, UnitDirection.Right } ),
+                        ( new Vector2(1, 0), new List<UnitDirection>(){ UnitDirection.Right, UnitDirection.LowerRight } ),
                     };
+                    directionBackward = (new Vector2(-1, -1), new List<UnitDirection>() { UnitDirection.Up, UnitDirection.UpperRight, UnitDirection.Right });
                     break;
                 case (-1, 1):
-                    Debug.Log("UpperLeft");
-                    moves = new List<PossibleMove>
+                    //Debug.Log("UpperLeft");
+                    directionsForward = new List<(Vector2, List<UnitDirection>)>()
                     {
-                        new PossibleMove(this, xStart + -1, yStart + 1, new List<ChessPieceDirection>(){ ChessPieceDirection.Left, ChessPieceDirection.UpperLeft, ChessPieceDirection.Up }),
-                        new PossibleMove(this, xStart + 0, yStart + 1, new List<ChessPieceDirection>(){ ChessPieceDirection.Up, ChessPieceDirection.UpperRight }),
-                        new PossibleMove(this, xStart + -1, yStart + 0, new List<ChessPieceDirection>(){ ChessPieceDirection.Left, ChessPieceDirection.LowerLeft }),
-                        new PossibleMove(this, xStart + 1, yStart + -1, new List<ChessPieceDirection>(){ ChessPieceDirection.Left, ChessPieceDirection.UpperLeft, ChessPieceDirection.Up }),
+                        ( new Vector2(0, 1), new List<UnitDirection>(){ UnitDirection.Up, UnitDirection.UpperRight } ),
+                        ( new Vector2(-1, 1), new List<UnitDirection>(){ UnitDirection.Left, UnitDirection.UpperLeft, UnitDirection.Up } ),
+                        ( new Vector2(-1, 0), new List<UnitDirection>(){ UnitDirection.Left, UnitDirection.LowerLeft } ),
                     };
+                    directionBackward = (new Vector2(1, -1), new List<UnitDirection>() { UnitDirection.Left, UnitDirection.UpperLeft, UnitDirection.Up });
                     break;
                 case (1, -1):
-                    Debug.Log("LowerRight");
-                    moves = new List<PossibleMove>
+                    //Debug.Log("LowerRight");
+                    directionsForward = new List<(Vector2, List<UnitDirection>)>()
                     {
-                        new PossibleMove(this, xStart + 1, yStart + -1, new List<ChessPieceDirection>(){ ChessPieceDirection.Right, ChessPieceDirection.LowerRight, ChessPieceDirection.Down }),
-                        new PossibleMove(this, xStart + 0, yStart + -1, new List<ChessPieceDirection>(){ ChessPieceDirection.Down, ChessPieceDirection.LowerLeft }),
-                        new PossibleMove(this, xStart + 1, yStart + 0, new List<ChessPieceDirection>(){ ChessPieceDirection.Right, ChessPieceDirection.UpperRight }),
-                        new PossibleMove(this, xStart + -1, yStart + 1, new List<ChessPieceDirection>(){ ChessPieceDirection.Right, ChessPieceDirection.LowerRight, ChessPieceDirection.Down }),
+                        ( new Vector2(0, -1), new List<UnitDirection>(){ UnitDirection.Down, UnitDirection.LowerLeft } ),
+                        ( new Vector2(1, -1), new List<UnitDirection>(){ UnitDirection.Right, UnitDirection.LowerRight, UnitDirection.Down } ),
+                        ( new Vector2(1, 0), new List<UnitDirection>(){ UnitDirection.Right, UnitDirection.UpperRight } ),
                     };
+                    directionBackward = (new Vector2(-1, 1), new List<UnitDirection>() { UnitDirection.Right, UnitDirection.LowerRight, UnitDirection.Down });
                     break;
                 case (-1, -1):
-                    Debug.Log("LowerLeft");
-                    moves = new List<PossibleMove>
+                    //Debug.Log("LowerLeft");
+                    directionsForward = new List<(Vector2, List<UnitDirection>)>()
                     {
-                        new PossibleMove(this, xStart + -1, yStart + -1, new List<ChessPieceDirection>(){ ChessPieceDirection.Left, ChessPieceDirection.LowerLeft, ChessPieceDirection.Down }),
-                        new PossibleMove(this, xStart + 0, yStart + -1, new List<ChessPieceDirection>(){ ChessPieceDirection.Down, ChessPieceDirection.LowerRight }),
-                        new PossibleMove(this, xStart + -1, yStart + 0, new List<ChessPieceDirection>(){ ChessPieceDirection.Left, ChessPieceDirection.UpperLeft }),
-                        new PossibleMove(this, xStart + 1, yStart + 1, new List<ChessPieceDirection>(){ ChessPieceDirection.Left, ChessPieceDirection.LowerLeft, ChessPieceDirection.Down }),
+                        ( new Vector2(0, -1), new List<UnitDirection>(){ UnitDirection.Down, UnitDirection.LowerRight } ),
+                        ( new Vector2(-1, -1), new List<UnitDirection>(){ UnitDirection.Left, UnitDirection.LowerLeft, UnitDirection.Down } ),
+                        ( new Vector2(-1, 0), new List<UnitDirection>(){ UnitDirection.Left, UnitDirection.UpperLeft } ),
                     };
+                    directionBackward = (new Vector2(1, 1), new List<UnitDirection>() { UnitDirection.Left, UnitDirection.LowerLeft, UnitDirection.Down });
                     break;
                 default:
-                    moves = new List<PossibleMove>();
+                    directionsForward = new List<(Vector2, List<UnitDirection>)>();
+                    directionBackward = (new Vector2(0, 0), new List<UnitDirection>());
                     break;
             }
 
-            foreach (var move in moves)
+            foreach (var direction in directionsForward)
             {
-                Debug.Log($"PawnMovePattern - move {move.End.X}, {move.End.Y}");
-
-                if (Board.IsPositionOnBoard(move.End.X, move.End.Y) && Board.GetPosition(move.End.X, move.End.Y) == null)
-                {
-                    result.Add(move);
-                }
+                result.AddRange(LineMovePattern(xStart, yStart, (int)direction.vector.x, (int)direction.vector.y, direction.directions, MovementDistance));
             }
+
+            result.AddRange(LineMovePattern(xStart, yStart, (int)directionBackward.vector.x, (int)directionBackward.vector.y, directionBackward.directions, MovementDistance));
 
             // if ((vector.X & 1) == 0 || (vector.Y & 1) == 0)
             // {

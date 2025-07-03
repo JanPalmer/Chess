@@ -51,11 +51,11 @@ namespace Components
 
             if (ChessPieceInfo.Player == PlayerSide.White)
             {
-                SetDirection(ChessPieceDirection.Up);
+                SetDirection(UnitDirection.Up);
             }
             else
             {
-                SetDirection(ChessPieceDirection.Down);
+                SetDirection(UnitDirection.Down);
             }
         }
 
@@ -80,7 +80,7 @@ namespace Components
             }
         }
 
-        public void MoveChessPiece(PossibleMove move, ChessPieceDirection chosenDirection)
+        public void MoveChessPiece(PossibleMove move, UnitDirection chosenDirection)
         {
             if (move.Directions.SingleOrDefault(x => x.Direction == chosenDirection) == null)
             {
@@ -105,6 +105,12 @@ namespace Components
 
             Debug.Log($"ChessmanComponent - Moving Chesspiece {ChessPieceInfo.Player} {ChessPieceInfo.Role}, {chosenDirection}");
 
+            if (move.PrecedingMoves != null && move.PrecedingMoves.Count > 0)
+            {
+                var preMove = move.PrecedingMoves.First();
+                Debug.Log($"Preceding move - {preMove.Move.End.X}, {preMove.Move.End.Y}, {preMove.Direction}");
+            }
+
             ChessPieceInfo.Board.MoveChessPiece(move, chosenDirection);
 
             SetCoords();
@@ -124,7 +130,7 @@ namespace Components
 
         #region Rotation
 
-        public void SetDirection(ChessPieceDirection direction)
+        public void SetDirection(UnitDirection direction)
         {
             var vector = DirectionConverter.Convert(direction);
 
@@ -143,7 +149,7 @@ namespace Components
             // Starting Vector2 is (0, 1), because base sprite is turned upwards
             float angle = Vector2.SignedAngle(new Vector2(0, 1), new Vector2(x, y));
 
-            Debug.Log($"Vector to = {x}, {y}, Rotate by {angle}");
+            //Debug.Log($"Vector to = {x}, {y}, Rotate by {angle}");
 
             this.transform.rotation = Quaternion.Euler(0, 0, angle);
 
@@ -175,7 +181,7 @@ namespace Components
             {
                 MovePlateSpawn(move);
 
-                Debug.Log($"Move plate spawned - {move.End.X}, {move.End.Y}");
+                //Debug.Log($"Move plate spawned - {move.End.X}, {move.End.Y}");
             }
         }
 
@@ -222,10 +228,10 @@ namespace Components
         {
             var vector = DirectionConverter.Convert(directionArrow.Direction);
 
-            var xCoords = move.End.X + vector.X / 2f;
-            var yCoords = move.End.Y + vector.Y / 2f;
+            var xCoords = move.End.X + vector.X / 3.0f;
+            var yCoords = move.End.Y + vector.Y / 3.0f;
 
-            Debug.Log($"Spawn Arrow - {xCoords}, {yCoords}");
+            //Debug.Log($"Spawn Arrow - {xCoords}, {yCoords}");
 
             var coordinates = CalculateTransform(xCoords, yCoords);
 

@@ -1,6 +1,6 @@
 namespace Enums
 {
-    public enum ChessPieceDirection
+    public enum UnitDirection
     {
         Unknown,
         Up,

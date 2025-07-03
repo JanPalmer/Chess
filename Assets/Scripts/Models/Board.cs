@@ -47,7 +47,7 @@ public class Board
         return true;
     }
 
-    public Chessman MoveChessPiece(PossibleMove move, ChessPieceDirection direction)
+    public Chessman MoveChessPiece(PossibleMove move, UnitDirection direction)
     {
         //Debug.Log($"Move - {move.Start.X}, {move.Start.Y} -> {move.End.X}, {move.End.Y}");
 

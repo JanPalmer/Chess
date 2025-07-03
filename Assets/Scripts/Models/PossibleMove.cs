@@ -19,7 +19,7 @@ namespace Models
 
         public readonly List<DirectionArrow> Directions;
 
-        public readonly List<PossibleMove> PrecedingMoves = new List<PossibleMove>();
+        public readonly List<DirectionArrow> PrecedingMoves = new List<DirectionArrow>();
 
 
         public PossibleMove(PossibleMove moveToCopy)
@@ -31,7 +31,7 @@ namespace Models
             Directions = CopyDirectionArrows(moveToCopy.Directions);
         }
 
-        public PossibleMove(Chessman chessPiece, int xEnd, int yEnd, IEnumerable<ChessPieceDirection> directions)
+        public PossibleMove(Chessman chessPiece, int xEnd, int yEnd, IEnumerable<UnitDirection> directions)
         {
             ChessPiece = chessPiece;
             Start = (chessPiece.XBoard, chessPiece.YBoard);
@@ -39,7 +39,7 @@ namespace Models
             Directions = CreateDirectionArrows(directions);
         }
 
-        public PossibleMove(Chessman chessPiece, int xStart, int yStart, int xEnd, int yEnd, IEnumerable<ChessPieceDirection> directions)
+        public PossibleMove(Chessman chessPiece, int xStart, int yStart, int xEnd, int yEnd, IEnumerable<UnitDirection> directions)
         {
             ChessPiece = chessPiece;
             Start = (xStart, yStart);
@@ -47,7 +47,7 @@ namespace Models
             Directions = CreateDirectionArrows(directions);
         }
 
-        private List<DirectionArrow> CreateDirectionArrows(IEnumerable<ChessPieceDirection> directions)
+        private List<DirectionArrow> CreateDirectionArrows(IEnumerable<UnitDirection> directions)
         {
             var result = new List<DirectionArrow>();
 
