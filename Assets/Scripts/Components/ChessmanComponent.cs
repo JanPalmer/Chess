@@ -228,8 +228,8 @@ namespace Components
         {
             var vector = DirectionConverter.Convert(directionArrow.Direction);
 
-            var xCoords = move.End.X + vector.X / 3.0f;
-            var yCoords = move.End.Y + vector.Y / 3.0f;
+            var xCoords = move.End.X + vector.X / 2.8f;
+            var yCoords = move.End.Y + vector.Y / 2.8f;
 
             //Debug.Log($"Spawn Arrow - {xCoords}, {yCoords}");
 

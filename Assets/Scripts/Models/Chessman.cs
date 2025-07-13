@@ -10,6 +10,8 @@ namespace Models
 {
     public class Chessman
     {
+        // The 0.5 is for turning/movement on the skewed axes, since for 1.0 the distance to the left and right is not registered,
+        // while putting 2.0 gives too much movement forward
         public const float MovementDistance = 1.5f;
 
         /// <summary>
@@ -395,7 +397,7 @@ namespace Models
             }
 
             result.AddRange(LineMovePattern(xStart, yStart, (int)directionBackward.vector.x, (int)directionBackward.vector.y, directionBackward.directions, MovementDistance));
-
+            result.Add(new PossibleMove(this, XBoard, YBoard, directionBackward.directions));
             // if ((vector.X & 1) == 0 || (vector.Y & 1) == 0)
             // {
             //     var fields = new List<(int x, int y)> { (1, 0), (2, 0), (1, -1), (1, 1) };
