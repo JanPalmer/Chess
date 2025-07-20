@@ -14,23 +14,23 @@ namespace Components
         public GameObject MovePlateBlue;
         public GameObject DirectionArrow;
 
-        public Chessman ChessPieceInfo = null!;
+        public IChessPiece PieceInfo = null!;
 
         public SpriteLibrary SpriteLibrary;
         private GameObject _movePlateColored;
 
         public Chessman ToChessman()
         {
-            return new Chessman(ChessPieceInfo);
+            return new Chessman(PieceInfo);
         }
 
-        public void Activate(string name, int x, int y, Board board)
+        public virtual void Activate(string name, int x, int y, Board board)
         {
             SpriteLibrary = Controller.GetComponent<SpriteLibrary>();
 
             // take the instantianted location and adjust the transform
             this.name = name;
-            ChessPieceInfo = new Chessman()
+            PieceInfo = new Chessman()
             {
                 XBoard = x,
                 YBoard = y,
@@ -46,10 +46,10 @@ namespace Components
 
             SetCoords();
 
-            _movePlateColored = MovePlateColoredSpawn(x, y, ChessPieceInfo.Player);
+            _movePlateColored = MovePlateColoredSpawn(x, y, PieceInfo.Player);
             _movePlateColored.transform.SetParent(this.transform, true);
 
-            if (ChessPieceInfo.Player == PlayerSide.White)
+            if (PieceInfo.Player == PlayerSide.White)
             {
                 SetDirection(UnitDirection.Up);
             }
@@ -59,18 +59,18 @@ namespace Components
             }
         }
 
-        public void SetCoords()
+        public virtual void SetCoords()
         {
-            var newCoordinates = CalculateTransform(ChessPieceInfo.XBoard, ChessPieceInfo.YBoard);
+            var newCoordinates = TransformCalculator.CalculateTransform(PieceInfo.XBoard, PieceInfo.YBoard);
 
             this.transform.position = new Vector3(newCoordinates.X, newCoordinates.Y, -1.0f);
         }
 
-        private void OnMouseUp()
+        protected virtual void OnMouseUp()
         {
             var game = Controller!.GetComponent<Game>();
 
-            if (!game.IsGameOver && game.CurrentPlayer == ChessPieceInfo.Player)
+            if (!game.IsGameOver && game.CurrentPlayer == PieceInfo.Player)
             {
                 DestroyMovePlates();
 
@@ -103,7 +103,7 @@ namespace Components
             //     game.RemoveChesspiece(pieceObj);
             // }
 
-            Debug.Log($"ChessmanComponent - Moving Chesspiece {ChessPieceInfo.Player} {ChessPieceInfo.Role}, {chosenDirection}");
+            Debug.Log($"ChessmanComponent - Moving Chesspiece {PieceInfo.Player} {PieceInfo.Role}, {chosenDirection}");
 
             if (move.PrecedingMoves != null && move.PrecedingMoves.Count > 0)
             {
@@ -111,21 +111,11 @@ namespace Components
                 Debug.Log($"Preceding move - {preMove.Move.End.X}, {preMove.Move.End.Y}, {preMove.Direction}");
             }
 
-            ChessPieceInfo.Board.MoveChessPiece(move, chosenDirection);
+            PieceInfo.Board.MoveChessPiece(move, chosenDirection);
 
             SetCoords();
 
             SetDirection(chosenDirection);
-        }
-
-        private (float X, float Y) CalculateTransform(float x, float y)
-        {
-            x *= 0.66f;
-            y *= 0.66f;
-            x += -2.3f;
-            y += -2.3f;
-
-            return (x, y);
         }
 
         #region Rotation
@@ -144,7 +134,7 @@ namespace Components
         /// </summary>
         /// <param name="x">X coordinate on the board</param>
         /// <param name="y">Y coordinate on the board</param>
-        public void SetDirection(int x, int y)
+        public virtual void SetDirection(int x, int y)
         {
             // Starting Vector2 is (0, 1), because base sprite is turned upwards
             float angle = Vector2.SignedAngle(new Vector2(0, 1), new Vector2(x, y));
@@ -175,7 +165,7 @@ namespace Components
 
         public void InitiateMovePlates()
         {
-            var moves = ChessPieceInfo.GetPossibleMoves();
+            var moves = PieceInfo.GetPossibleMoves();
 
             foreach (var move in moves)
             {
@@ -191,7 +181,7 @@ namespace Components
 
             GameObject mp = Instantiate(MovePlate, new Vector3(possibleMove.End.X, possibleMove.End.Y, -3.0f), Quaternion.identity);
 
-            var newCoordinates = CalculateTransform(possibleMove.End.X, possibleMove.End.Y);
+            var newCoordinates = TransformCalculator.CalculateTransform(possibleMove.End.X, possibleMove.End.Y);
             mp.transform.position = new Vector3(newCoordinates.X, newCoordinates.Y, -3.0f);
 
             MovePlate mpScript = mp.GetComponent<MovePlate>();
@@ -208,7 +198,7 @@ namespace Components
 
         public GameObject MovePlateColoredSpawn(int x, int y, PlayerSide player)
         {
-            var newCoordinates = CalculateTransform(x, y);
+            var newCoordinates = TransformCalculator.CalculateTransform(x, y);
             GameObject mp = null;
 
             // -0.5f to spawn the plate below the piece, so it doesn't interfere with collision checking on click
@@ -233,7 +223,7 @@ namespace Components
 
             //Debug.Log($"Spawn Arrow - {xCoords}, {yCoords}");
 
-            var coordinates = CalculateTransform(xCoords, yCoords);
+            var coordinates = TransformCalculator.CalculateTransform(xCoords, yCoords);
 
             GameObject arrowObj = Instantiate(DirectionArrow, new Vector3(coordinates.X, coordinates.Y, -3.5f), Quaternion.identity);
             arrowObj.GetComponent<DirectionArrowComponent>().Initialize(directionArrow);

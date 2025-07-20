@@ -843,6 +843,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   chesspiece: {fileID: 1498772905191139900, guid: c1a8a533218e64d49affec1f3fee8fb6, type: 3}
+  wall: {fileID: 4134017419289622511, guid: dc80e647a072bfe4ea9cc537f48e75c3, type: 3}
 --- !u!114 &1811716153
 MonoBehaviour:
   m_ObjectHideFlags: 0

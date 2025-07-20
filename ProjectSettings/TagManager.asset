@@ -9,6 +9,7 @@ TagManager:
   - DirectionArrow
   - TextWinner
   - TextRestart
+  - Terrain
   layers:
   - Default
   - TransparentFX

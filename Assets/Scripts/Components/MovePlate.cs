@@ -29,13 +29,6 @@ namespace Components
                 gameObject.GetComponent<SpriteRenderer>().color = new Color(1.0f, 0, 0);
                 return;
             }
-
         }
-
-        // public void SetCoords(int x, int y)
-        // {
-        //     MatrixX = x;
-        //     MatrixY = y;
-        // }
     }
 }

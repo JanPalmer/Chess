@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Algorithms;
 using Enums;
+using Models;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -14,6 +15,7 @@ namespace Components
     public class Game : MonoBehaviour
     {
         public GameObject chesspiece;
+        public GameObject wall;
 
         // Positions and team for each chess piece
         //private GameObject[,] positions = new GameObject[8, 8];
@@ -31,6 +33,8 @@ namespace Components
         public bool IsGameOver => _gameOver;
 
         private IAlgorithm _opponentAlgorithm = null;
+
+        private int _wallCounter = 0;
 
         void Start()
         {
@@ -54,9 +58,11 @@ namespace Components
             // };
 
             _chessPieces = new List<GameObject>{
-                Create("white_rook", 0, 0),  Create("white_pawn", 1, 1), Create("white_pawn", 3, 1),
+                CreateChesspiece("white_rook", 0, 0),  CreateChesspiece("white_pawn", 1, 1), CreateChesspiece("white_pawn", 3, 1),
 
-                Create("black_rook", 0, 7),  Create("black_pawn", 1, 6), Create("black_pawn", 3, 6),
+                CreateChesspiece("black_rook", 0, 7),  CreateChesspiece("black_pawn", 1, 6), CreateChesspiece("black_pawn", 3, 6),
+
+                CreateWall(5, 5), CreateWall(4, 4)
             };
 
             // foreach (var piece in playerWhite)
@@ -72,7 +78,7 @@ namespace Components
             _opponentAlgorithm = new NegamaxAlgorithm();
         }
 
-        public GameObject Create(string name, int x, int y)
+        public GameObject CreateChesspiece(string name, int x, int y)
         {
             GameObject obj = Instantiate(chesspiece, new Vector3(0, 0, -1), Quaternion.identity);
             ChessmanComponent cm = obj.GetComponent<ChessmanComponent>();
@@ -81,7 +87,23 @@ namespace Components
 
             cm.Activate(name, x, y, _board);
 
-            _board.SetPosition(cm.ChessPieceInfo, x, y);
+            _board.SetPosition(cm.PieceInfo, x, y);
+
+            return obj;
+        }
+
+        public GameObject CreateWall(int x, int y)
+        {
+            GameObject obj = Instantiate(wall, new Vector3(0, 0, -1), Quaternion.identity);
+            WallComponent cm = obj.GetComponent<WallComponent>();
+
+            var wallName = "wall" + (++_wallCounter).ToString();
+
+            Console.WriteLine(wallName);
+
+            cm.Activate(wallName, x, y, _board);
+
+            _board.SetPosition(cm.PieceInfo, x, y);
 
             return obj;
         }
@@ -122,14 +144,16 @@ namespace Components
         {
             return _chessPieces.SingleOrDefault((obj) =>
             {
-                var pieceInfo = obj.GetComponent<ChessmanComponent>().ChessPieceInfo;
+                var component = obj.GetComponent<ChessmanComponent>();
+                var pieceInfo = (Chessman)component.PieceInfo;
+                Debug.Log("GetChesspiece: " + component.name);
                 return pieceInfo.XBoard == x && pieceInfo.YBoard == y && pieceInfo.IsRemoved == false;
             });
         }
 
         public void RemoveChesspiece(GameObject chesspiece)
         {
-            var pieceInfo = chesspiece.GetComponent<ChessmanComponent>().ChessPieceInfo;
+            var pieceInfo = chesspiece.GetComponent<ChessmanComponent>().PieceInfo;
             _board.SetPositionEmpty(pieceInfo.XBoard, pieceInfo.YBoard);
             _chessPieces.Remove(chesspiece);
             Destroy(chesspiece);

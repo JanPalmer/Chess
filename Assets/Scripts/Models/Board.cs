@@ -8,12 +8,12 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "Board", menuName = "Scriptable Objects/Board")]
 public class Board
 {
-    public Chessman[,] Positions { get; set; } = new Chessman[8, 8];
+    public IChessPiece[,] Positions { get; set; } = new IChessPiece[8, 8];
 
     // public List<Chessman> PlayerBlack { get; } = new List<Chessman>(16);
     // public List<Chessman> PlayerWhite { get; } = new List<Chessman>(16);
 
-    public void SetPosition(Chessman chesspiece, int x, int y)
+    public void SetPosition(IChessPiece chesspiece, int x, int y)
     {
         chesspiece.XBoard = x;
         chesspiece.YBoard = y;
@@ -23,7 +23,7 @@ public class Board
 
     public void SetPosition(GameObject obj, int x, int y)
     {
-        var chesspiece = obj.GetComponent<ChessmanComponent>().ChessPieceInfo;
+        var chesspiece = obj.GetComponent<ChessmanComponent>().PieceInfo;
         SetPosition(chesspiece, x, y);
     }
 
@@ -32,7 +32,7 @@ public class Board
         Positions[x, y] = null;
     }
 
-    public Chessman GetPosition(int x, int y)
+    public IChessPiece GetPosition(int x, int y)
     {
         return Positions[x, y];
     }

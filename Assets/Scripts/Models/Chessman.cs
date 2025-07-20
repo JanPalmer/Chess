@@ -8,44 +8,24 @@ using UnityEngine;
 
 namespace Models
 {
-    public class Chessman
+    public class Chessman : IChessPiece
     {
-        // The 0.5 is for turning/movement on the skewed axes, since for 1.0 the distance to the left and right is not registered,
-        // while putting 2.0 gives too much movement forward
         public const float MovementDistance = 1.5f;
 
-        /// <summary>
-        /// Parent Board to which the piece belongs to
-        /// </summary>
         public Board Board { get; set; }
 
-        /// <summary>
-        /// Position on the board - X coordinate
-        /// </summary>
         public int XBoard { get; set; } = -1;
-        /// <summary>
-        /// Position on the board - Y coordinate
-        /// </summary>
+
         public int YBoard { get; set; } = -1;
 
-        /// <summary>
-        /// Variable to keep track if player is "black" or "white"
-        /// </summary>
         public PlayerSide Player { get; set; }
 
-        /// <summary>
-        /// Piece role, like 'Pawn', 'Rook' etc
-        /// </summary>
         public ChessPieceRole Role { get; set; }
 
-        /// <summary>
-        /// Marks the piece as removed
-        /// </summary>
         public bool IsRemoved { get; set; } = false;
 
 
         // Tank stats
-
         public uint Health { get; set; }
 
         public uint Movement { get; set; }
@@ -62,6 +42,17 @@ namespace Models
 
         public Chessman() { }
 
+        public Chessman(IChessPiece toCopy, Board board = null)
+        {
+            XBoard = toCopy.XBoard;
+            YBoard = toCopy.YBoard;
+            Player = toCopy.Player;
+            Role = toCopy.Role;
+            IsRemoved = toCopy.IsRemoved;
+            Board = board;
+            Direction = toCopy.Direction;
+        }
+
         public Chessman(Chessman toCopy, Board board = null)
         {
             XBoard = toCopy.XBoard;
@@ -75,20 +66,20 @@ namespace Models
 
         public Chessman(ChessmanComponent toCopy, Board board = null)
         {
-            XBoard = toCopy.ChessPieceInfo.XBoard;
-            YBoard = toCopy.ChessPieceInfo.YBoard;
-            Player = toCopy.ChessPieceInfo.Player;
-            Role = toCopy.ChessPieceInfo.Role;
-            IsRemoved = toCopy.ChessPieceInfo.IsRemoved;
+            XBoard = toCopy.PieceInfo.XBoard;
+            YBoard = toCopy.PieceInfo.YBoard;
+            Player = toCopy.PieceInfo.Player;
+            Role = toCopy.PieceInfo.Role;
+            IsRemoved = toCopy.PieceInfo.IsRemoved;
             Board = board;
-            Direction = toCopy.ChessPieceInfo.Direction;
+            Direction = toCopy.PieceInfo.Direction;
         }
 
         #endregion
 
         #region Piece movement patterns
 
-        public List<PossibleMove> GetPossibleMoves()
+        public virtual List<PossibleMove> GetPossibleMoves()
         {
             var moves = new List<PossibleMove>();
 
@@ -171,6 +162,15 @@ namespace Models
                 && Board.GetPosition(x, y) == null
                 && DistanceFromSource() <= movementRadius)
             {
+
+                // Check fields on surrounding tiles to make sure you don't half-phase through terrain
+                if (xIncrement != 0 && yIncrement != 0
+                 && ((Board.IsPositionOnBoard(xStart, y) && Board.GetPosition(xStart, y) != null)
+                 || (Board.IsPositionOnBoard(x, yStart) && Board.GetPosition(x, yStart) != null)))
+                {
+                    break;
+                }
+
                 result.Add(new PossibleMove(this, x, y, directions));
 
                 x += xIncrement;
@@ -179,76 +179,6 @@ namespace Models
 
             return result;
         }
-
-        // public List<PossibleMove> LMovePattern()
-        // {
-        //     var result = new List<PossibleMove>();
-        //     var possibleVectors = new List<(int x, int y)>(){
-        //     (1, 2),
-        //     (-1, 2),
-        //     (2, 1),
-        //     (-2, 1),
-        //     (1, -2),
-        //     (-1, -2),
-        //     (2, -1),
-        //     (-2, -1),
-        // };
-
-        //     foreach (var vector in possibleVectors)
-        //     {
-        //         if (PointMovePlate(XBoard + vector.x, YBoard + vector.y, out var possibleMove))
-        //         {
-        //             result.Add(possibleMove);
-        //         }
-        //     }
-
-        //     return result;
-        // }
-
-        // public List<PossibleMove> SurroundMovePattern()
-        // {
-        //     var possibleMoves = new List<PossibleMove>();
-
-        //     for (int i = -1; i <= 1; i++)
-        //     {
-        //         for (int j = -1; j <= 1; j++)
-        //         {
-        //             if (i == 0 && j == 0)
-        //             {
-        //                 continue;
-        //             }
-
-        //             if (PointMovePlate(XBoard + i, YBoard + j, out var possibleMove))
-        //             {
-        //                 possibleMoves.Add(possibleMove);
-        //             }
-        //         }
-        //     }
-
-        //     return possibleMoves;
-        // }
-
-        // public bool PointMovePlate(int x, int y, out PossibleMove possibleMove)
-        // {
-        //     if (Board.IsPositionOnBoard(x, y))
-        //     {
-        //         var pieceToRemove = Board.GetPosition(x, y);
-
-        //         if (pieceToRemove == null)
-        //         {
-        //             possibleMove = new PossibleMove(this, x, y);
-        //             return true;
-        //         }
-        //         else if (pieceToRemove.Player != Player)
-        //         {
-        //             possibleMove = new PossibleMove(this, pieceToRemove);
-        //             return true;
-        //         }
-        //     }
-
-        //     possibleMove = null;
-        //     return false;
-        // }
 
         public List<PossibleMove> RookMovePattern()
         {
