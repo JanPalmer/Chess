@@ -9,4 +9,18 @@ public class DirectionArrow
 
     // Depth of movement - how many single moves the unit must do to reach the End position
     public int Depth { get; set; } = 1;
+
+    public override bool Equals(object obj)
+    {
+        if (obj is not DirectionArrow)
+        {
+            return false;
+        }
+
+        var arrowToCheck = obj as DirectionArrow;
+
+        return this.Move.Equals(arrowToCheck.Move)
+            && this.Direction == arrowToCheck.Direction
+            && this.Depth == arrowToCheck.Depth;
+    }
 }

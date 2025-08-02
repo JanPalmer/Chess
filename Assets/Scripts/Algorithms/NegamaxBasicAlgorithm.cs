@@ -9,14 +9,14 @@ namespace Algorithms
     // Negamax without Alpha-Beta pruning
     public class NegamaxBasicAlgorithm : IAlgorithm
     {
-        private Dictionary<ChessPieceRole, int> _pieceValues = new Dictionary<ChessPieceRole, int>(){
-        { ChessPieceRole.Unknown, 0 },
-        { ChessPieceRole.Pawn, 1 },
-        { ChessPieceRole.Bishop, 3 },
-        { ChessPieceRole.Knight, 3 },
-        { ChessPieceRole.Rook, 5 },
-        { ChessPieceRole.Queen, 8 },
-        { ChessPieceRole.King, 1000 },
+        private Dictionary<UnitRole, int> _pieceValues = new Dictionary<UnitRole, int>(){
+        { UnitRole.Unknown, 0 },
+        { UnitRole.Pawn, 1 },
+        { UnitRole.Bishop, 3 },
+        { UnitRole.Knight, 3 },
+        { UnitRole.Rook, 5 },
+        { UnitRole.Queen, 8 },
+        { UnitRole.King, 1000 },
     };
 
         private PlayerSide _originalPlayer;
@@ -153,7 +153,7 @@ namespace Algorithms
 
             foreach (var move in moves)
             {
-                var chesspieceRole = ChessPieceRole.Unknown;
+                var chesspieceRole = UnitRole.Unknown;
                 if (move.RemovedChessPiece != null)
                 {
                     chesspieceRole = move.RemovedChessPiece.Role;
@@ -169,7 +169,7 @@ namespace Algorithms
 
         private void MakeMove(PossibleMove move)
         {
-            if (move.RemovedChessPiece != null && move.RemovedChessPiece.Role == ChessPieceRole.King)
+            if (move.RemovedChessPiece != null && move.RemovedChessPiece.Role == UnitRole.King)
             {
                 _isGameOver = true;
             }
@@ -179,7 +179,7 @@ namespace Algorithms
 
         private void UndoMove(PossibleMove move)
         {
-            if (move.RemovedChessPiece != null && move.RemovedChessPiece.Role == ChessPieceRole.King)
+            if (move.RemovedChessPiece != null && move.RemovedChessPiece.Role == UnitRole.King)
             {
                 _isGameOver = false;
             }

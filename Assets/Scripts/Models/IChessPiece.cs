@@ -31,7 +31,7 @@ public interface IChessPiece
     /// <summary>
     /// Piece role, like 'Pawn', 'Rook' etc
     /// </summary>
-    public ChessPieceRole Role { get; set; }
+    public UnitRole Role { get; set; }
 
     /// <summary>
     /// Marks the piece as removed
@@ -40,16 +40,19 @@ public interface IChessPiece
 
 
     // Tank stats
-    public uint Health { get; set; }
+    public int Health { get; set; }
 
-    public uint Movement { get; set; }
+    public int Movement { get; set; }
 
-    public uint Firepower { get; set; }
+    public int Firepower { get; set; }
 
-    public uint Survivability { get; set; }
+    public int Survivability { get; set; }
 
     public UnitDirection Direction { get; set; }
 
 
     public List<PossibleMove> GetPossibleMoves();
+
+    public Vector2 GetPositionVector2();
+    public (int X, int Y) GetPositionTupleXY();
 }

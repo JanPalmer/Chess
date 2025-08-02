@@ -17,6 +17,11 @@ namespace Components
         public GameObject chesspiece;
         public GameObject wall;
 
+        public GameObject MovePlate;
+        public GameObject MovePlateOrange;
+        public GameObject MovePlateBlue;
+        public GameObject DirectionArrow;
+
         // Positions and team for each chess piece
         //private GameObject[,] positions = new GameObject[8, 8];
         // private GameObject[] playerBlack = new GameObject[16];
@@ -28,6 +33,29 @@ namespace Components
 
         private PlayerSide _currentPlayer = PlayerSide.White;
         public PlayerSide CurrentPlayer { get => _currentPlayer; set => _currentPlayer = value; }
+
+
+        private ChessmanComponent _highlightedPiece = null;
+        public ChessmanComponent HighlightedPiece
+        {
+            get => _highlightedPiece;
+            set
+            {
+                SelectChesspiece(value);
+                _highlightedPiece = value;
+            }
+        }
+
+        private DirectionArrow _highlightedArrow = null;
+        public DirectionArrow HighlightedArrow
+        {
+            get => _highlightedArrow;
+            set
+            {
+                SelectArrow(value);
+                _highlightedArrow = value;
+            }
+        }
 
         private bool _gameOver = false;
         public bool IsGameOver => _gameOver;
@@ -146,7 +174,7 @@ namespace Components
             {
                 var component = obj.GetComponent<ChessmanComponent>();
                 var pieceInfo = (Chessman)component.PieceInfo;
-                Debug.Log("GetChesspiece: " + component.name);
+                //Debug.Log("GetChesspiece: " + component.name);
                 return pieceInfo.XBoard == x && pieceInfo.YBoard == y && pieceInfo.IsRemoved == false;
             });
         }
@@ -176,5 +204,191 @@ namespace Components
         //     _gameOver = true;
         //     GameObject.FindGameObjectWithTag("TextWinner").GetComponent<TextMeshPro>().enabled = true;
         // }
+
+
+        #region Object selection - UI
+
+        public void SelectChesspiece(ChessmanComponent piece)
+        {
+            if (piece != HighlightedPiece)
+            {
+                if (HighlightedPiece != null && HighlightedArrow != null)
+                {
+                    HighlightedPiece.GetComponent<ChessmanComponent>().UndoMove(HighlightedArrow.Move);
+                }
+
+                _highlightedArrow = null;
+
+                DestroyMovePlates();
+
+                Debug.Log("SelectChesspiece - different piece");
+
+                if (piece != null)
+                {
+                    InitiateMovePlates(piece.PieceInfo);
+                }
+            }
+        }
+
+        public void SelectArrow(DirectionArrow arrow)
+        {
+            DestroyMovePlates();
+
+            if (arrow == null)
+            {
+                return;
+            }
+            Debug.Log("SelectArrow: " + arrow.Direction + ", pos: " + arrow.Move.Start.X + ", " + arrow.Move.Start.Y);
+
+
+            if (HighlightedArrow == null || !arrow.Equals(HighlightedArrow))
+            {
+                Debug.Log("Different arrow - " + arrow.Move.End.X + ", " + arrow.Move.End.Y);
+                if (HighlightedArrow != null)
+                {
+                    Debug.Log("Highlighter arrow - " + HighlightedArrow.Move.End.X + ", " + HighlightedArrow.Move.End.Y);
+                    HighlightedPiece.GetComponent<ChessmanComponent>().UndoMove(HighlightedArrow.Move);
+                }
+
+                InitiateMovePlates(arrow.Move.ChessPiece);
+                InitiateMovePlatesAttack(arrow.Move);
+                var pieceObj = GetChesspiece(arrow.Move.Start.X, arrow.Move.Start.Y).GetComponent<ChessmanComponent>();
+                pieceObj.Move(arrow.Move, arrow.Direction);
+            }
+            else
+            {
+                Debug.Log("Next turn");
+                // PerformShooting()
+                NextTurn().ConfigureAwait(false);
+                HighlightedArrow = null;
+                HighlightedPiece = null;
+            }
+        }
+
+        #endregion
+
+
+        #region MovePlate
+
+        public void DestroyMovePlates()
+        {
+            GameObject[] movePlates = GameObject.FindGameObjectsWithTag("MovePlate");
+
+            foreach (var movePlate in movePlates)
+            {
+                Destroy(movePlate);
+            }
+
+            DestroyDirectionArrows();
+        }
+
+        public void InitiateMovePlates(IChessPiece piece)
+        {
+            var moves = piece.GetPossibleMoves();
+
+            foreach (var move in moves)
+            {
+                MovePlateSpawn(move);
+
+                //Debug.Log($"Move plate spawned - {move.End.X}, {move.End.Y}");
+            }
+        }
+
+        public MovePlate MovePlateSpawn(PossibleMove possibleMove)
+        {
+            GameObject mp = Instantiate(MovePlate, new Vector3(possibleMove.End.X, possibleMove.End.Y, -3.0f), Quaternion.identity);
+
+            var newCoordinates = TransformCalculator.CalculateTransform(possibleMove.End.X, possibleMove.End.Y);
+            mp.transform.position = new Vector3(newCoordinates.X, newCoordinates.Y, -3.0f);
+
+            MovePlate mpScript = mp.GetComponent<MovePlate>();
+
+            mpScript.Move = possibleMove;
+
+            foreach (var direction in possibleMove.Directions)
+            {
+                DirectionArrowSpawn(possibleMove, direction);
+            }
+
+            return mpScript;
+        }
+
+        public void InitiateMovePlatesAttack(PossibleMove move)
+        {
+            if (move.Targets == null || move.Targets.Count <= 0)
+            {
+                return;
+            }
+
+            foreach (var target in move.Targets)
+            {
+                MovePlateSpawnAttack(move, target.PossibleTarget, target.Visibility);
+
+                //Debug.Log($"Move plate spawned - {move.End.X}, {move.End.Y}");
+            }
+        }
+
+        public MovePlate MovePlateSpawnAttack(PossibleMove move, IChessPiece target = null, UnitVisibility visibility = UnitVisibility.NotVisible)
+        {
+            GameObject mp = Instantiate(MovePlate, new Vector3(target.XBoard, target.YBoard, -3.0f), Quaternion.identity);
+
+            var newCoordinates = TransformCalculator.CalculateTransform(target.XBoard, target.YBoard);
+            mp.transform.position = new Vector3(newCoordinates.X, newCoordinates.Y, -3.0f);
+
+            MovePlate mpScript = mp.GetComponent<MovePlate>();
+
+            mpScript.Activate(move, target, visibility);
+
+            return mpScript;
+        }
+
+        public GameObject MovePlateColoredSpawn(int x, int y, PlayerSide player)
+        {
+            var newCoordinates = TransformCalculator.CalculateTransform(x, y);
+            GameObject mp = null;
+
+            // -0.5f to spawn the plate below the piece, so it doesn't interfere with collision checking on click
+            if (player == PlayerSide.White)
+            {
+                mp = Instantiate(MovePlateOrange, new Vector3(newCoordinates.X, newCoordinates.Y, -0.5f), Quaternion.identity);
+            }
+            else
+            {
+                mp = Instantiate(MovePlateBlue, new Vector3(newCoordinates.X, newCoordinates.Y, -0.5f), Quaternion.identity);
+            }
+
+            return mp;
+        }
+
+        public GameObject DirectionArrowSpawn(PossibleMove move, DirectionArrow directionArrow)
+        {
+            var vector = DirectionConverter.ConvertToVector2(directionArrow.Direction);
+
+            // coordinates are adjusted so the arrows are not directly on the border,
+            // possibly interfering with arrows from adjacent squares
+            var xCoords = move.End.X + vector.X / 2.8f;
+            var yCoords = move.End.Y + vector.Y / 2.8f;
+
+            //Debug.Log($"Spawn Arrow - {xCoords}, {yCoords}");
+
+            var coordinates = TransformCalculator.CalculateTransform(xCoords, yCoords);
+
+            GameObject arrowObj = Instantiate(DirectionArrow, new Vector3(coordinates.X, coordinates.Y, -3.5f), Quaternion.identity);
+            arrowObj.GetComponent<DirectionArrowComponent>().Initialize(directionArrow);
+
+            return arrowObj;
+        }
+
+        public void DestroyDirectionArrows()
+        {
+            GameObject[] directionaArrows = GameObject.FindGameObjectsWithTag("DirectionArrow");
+
+            foreach (var arrow in directionaArrows)
+            {
+                Destroy(arrow);
+            }
+        }
+
+        #endregion
     }
 }

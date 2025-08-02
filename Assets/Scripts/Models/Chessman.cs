@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Components;
 using Enums;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Models
@@ -20,19 +19,35 @@ namespace Models
 
         public PlayerSide Player { get; set; }
 
-        public ChessPieceRole Role { get; set; }
+        public UnitRole Role { get; set; }
 
         public bool IsRemoved { get; set; } = false;
 
 
         // Tank stats
-        public uint Health { get; set; }
 
-        public uint Movement { get; set; }
+        private int _health;
+        public int Health
+        {
+            get => _health;
+            set
+            {
+                if (value < 0)
+                {
+                    _health = 0;
+                }
+                else
+                {
+                    _health = value;
+                }
+            }
+        }
 
-        public uint Firepower { get; set; }
+        public int Movement { get; set; }
 
-        public uint Survivability { get; set; }
+        public int Firepower { get; set; }
+
+        public int Survivability { get; set; }
 
         public UnitDirection Direction { get; set; } = UnitDirection.Up;
 
@@ -123,16 +138,18 @@ namespace Models
                 //         moves = PawnMovePattern(XBoard, YBoard + 1);
                 //     }
                 //     break;
-                case ChessPieceRole.Rook:
+                case UnitRole.Rook:
                     moves = RookMovePattern();
                     break;
-                case ChessPieceRole.Pawn:
+                case UnitRole.Pawn:
                     moves = SingleMovePattern(XBoard, YBoard, Direction);
                     break;
                 default:
                     moves = new List<PossibleMove>();
                     break;
             }
+
+            Board.GetPossibleTargets(moves);
 
             return moves;
         }
@@ -229,7 +246,7 @@ namespace Models
         {
             var result = new List<PossibleMove>();
 
-            var vector = DirectionConverter.Convert(directionStart);
+            var vector = DirectionConverter.ConvertToVector2(directionStart);
             List<(Vector2 vector, List<UnitDirection> directions)> directionsForward;
             (Vector2 vector, List<UnitDirection> directions) directionBackward;
 
@@ -328,30 +345,20 @@ namespace Models
 
             result.AddRange(LineMovePattern(xStart, yStart, (int)directionBackward.vector.x, (int)directionBackward.vector.y, directionBackward.directions, MovementDistance));
             result.Add(new PossibleMove(this, XBoard, YBoard, directionBackward.directions));
-            // if ((vector.X & 1) == 0 || (vector.Y & 1) == 0)
-            // {
-            //     var fields = new List<(int x, int y)> { (1, 0), (2, 0), (1, -1), (1, 1) };
-
-            //     var directionVector = new Vector2(vector.X - 1, vector.Y - 0);
-            //     directionVector.Normalize();
-
-            //     float angle = Mathf.Atan2(directionVector.y, directionVector.x) * Mathf.Rad2Deg;
-
-            //     if (angle != 0)
-            //     {
-            //         for (int i = 0; i < fields.Count; i++)
-            //         {
-            //             var field = fields.First();
-            //             var fieldVector = Quaternion.Euler(0, 0, angle) * new Vector2(field.x, field.y);
-            //             fields.RemoveAt(0);
-            //             fields.Add(((int)fieldVector.x, (int)fieldVector.y));
-            //         }
-            //     }
-            // }
 
             return result;
         }
 
         #endregion
+
+        public Vector2 GetPositionVector2()
+        {
+            return new Vector2(XBoard, YBoard);
+        }
+
+        public (int X, int Y) GetPositionTupleXY()
+        {
+            return (XBoard, YBoard);
+        }
     }
 }

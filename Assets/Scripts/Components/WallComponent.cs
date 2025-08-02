@@ -15,7 +15,7 @@ namespace Components
                 XBoard = x,
                 YBoard = y,
                 Board = board,
-                Role = ChessPieceRole.Wall,
+                Role = UnitRole.Wall,
             };
 
             Debug.Log(this.name);

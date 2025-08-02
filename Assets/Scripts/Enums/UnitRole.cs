@@ -1,6 +1,6 @@
 namespace Enums
 {
-    public enum ChessPieceRole
+    public enum UnitRole
     {
         Unknown,
         Wall,

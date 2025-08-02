@@ -9,10 +9,7 @@ namespace Components
     {
         // References
         public GameObject Controller { get => GameObject.FindGameObjectWithTag("GameController"); }
-        public GameObject MovePlate;
-        public GameObject MovePlateOrange;
-        public GameObject MovePlateBlue;
-        public GameObject DirectionArrow;
+
 
         public IChessPiece PieceInfo = null!;
 
@@ -46,7 +43,8 @@ namespace Components
 
             SetCoords();
 
-            _movePlateColored = MovePlateColoredSpawn(x, y, PieceInfo.Player);
+            var game = Controller.GetComponent<Game>();
+            _movePlateColored = game.MovePlateColoredSpawn(x, y, PieceInfo.Player);
             _movePlateColored.transform.SetParent(this.transform, true);
 
             if (PieceInfo.Player == PlayerSide.White)
@@ -70,17 +68,17 @@ namespace Components
         {
             var game = Controller!.GetComponent<Game>();
 
-            if (!game.IsGameOver && game.CurrentPlayer == PieceInfo.Player)
+            if (!game.IsGameOver
+                && game.CurrentPlayer == PieceInfo.Player
+                && (PieceInfo.Role != UnitRole.Wall || PieceInfo.Role != UnitRole.Unknown))
             {
-                DestroyMovePlates();
-
-                InitiateMovePlates();
+                game.HighlightedPiece = this;
 
                 Debug.Log(this.name + " - MovePlates created");
             }
         }
 
-        public void MoveChessPiece(PossibleMove move, UnitDirection chosenDirection)
+        public void Move(PossibleMove move, UnitDirection chosenDirection)
         {
             if (move.Directions.SingleOrDefault(x => x.Direction == chosenDirection) == null)
             {
@@ -88,23 +86,9 @@ namespace Components
                 return;
             }
 
-            // if (move.RemovedChessPiece != null)
-            // {
-            //     var game = Controller.GetComponent<Game>();
-
-            //     var pieceObj = game.GetChesspiece(move.End.X, move.End.Y);
-            //     var chessPiece = pieceObj.GetComponent<ChessmanComponent>().ChessPieceInformation;
-
-            //     if (chessPiece.Role == ChessPieceRole.King)
-            //     {
-            //         game.Winner(ChessPieceInformation.Player);
-            //     }
-
-            //     game.RemoveChesspiece(pieceObj);
-            // }
-
             Debug.Log($"ChessmanComponent - Moving Chesspiece {PieceInfo.Player} {PieceInfo.Role}, {chosenDirection}");
 
+            // For debugging
             if (move.PrecedingMoves != null && move.PrecedingMoves.Count > 0)
             {
                 var preMove = move.PrecedingMoves.First();
@@ -118,15 +102,23 @@ namespace Components
             SetDirection(chosenDirection);
         }
 
+        public void UndoMove(PossibleMove move)
+        {
+            Debug.Log($"ChessmanComponent - Undoing move Chesspiece {PieceInfo.Player} {PieceInfo.Role}, {move.StartingDirection}");
+
+            PieceInfo.Board.UndoMove(move);
+
+            SetCoords();
+
+            SetDirection(move.StartingDirection);
+        }
+
         #region Rotation
 
         public void SetDirection(UnitDirection direction)
         {
-            var vector = DirectionConverter.Convert(direction);
-
+            var vector = DirectionConverter.ConvertToVector2(direction);
             SetDirection(vector.X, vector.Y);
-
-            //ChessPieceInformation.Direction = direction;
         }
 
         /// <summary>
@@ -137,114 +129,10 @@ namespace Components
         public virtual void SetDirection(int x, int y)
         {
             // Starting Vector2 is (0, 1), because base sprite is turned upwards
-            float angle = Vector2.SignedAngle(new Vector2(0, 1), new Vector2(x, y));
-
-            //Debug.Log($"Vector to = {x}, {y}, Rotate by {angle}");
-
-            this.transform.rotation = Quaternion.Euler(0, 0, angle);
+            this.transform.rotation = TransformCalculator.CalculateRotation(new Vector2(0, 1), new Vector2(x, y));
 
             // Don't rotate the attached colored MovePlate
             _movePlateColored.transform.rotation = Quaternion.identity;
-        }
-
-        #endregion
-
-        #region MovePlate
-
-        public void DestroyMovePlates()
-        {
-            GameObject[] movePlates = GameObject.FindGameObjectsWithTag("MovePlate");
-
-            foreach (var movePlate in movePlates)
-            {
-                Destroy(movePlate);
-            }
-
-            DestroyDirectionArrows();
-        }
-
-        public void InitiateMovePlates()
-        {
-            var moves = PieceInfo.GetPossibleMoves();
-
-            foreach (var move in moves)
-            {
-                MovePlateSpawn(move);
-
-                //Debug.Log($"Move plate spawned - {move.End.X}, {move.End.Y}");
-            }
-        }
-
-        public MovePlate MovePlateSpawn(PossibleMove possibleMove)
-        {
-            //var newCoordinates = CalculateTransform(possibleMove.End.X, possibleMove.End.Y);
-
-            GameObject mp = Instantiate(MovePlate, new Vector3(possibleMove.End.X, possibleMove.End.Y, -3.0f), Quaternion.identity);
-
-            var newCoordinates = TransformCalculator.CalculateTransform(possibleMove.End.X, possibleMove.End.Y);
-            mp.transform.position = new Vector3(newCoordinates.X, newCoordinates.Y, -3.0f);
-
-            MovePlate mpScript = mp.GetComponent<MovePlate>();
-
-            mpScript.Move = possibleMove;
-
-            foreach (var direction in possibleMove.Directions)
-            {
-                DirectionArrowSpawn(possibleMove, direction);
-            }
-
-            return mpScript;
-        }
-
-        public GameObject MovePlateColoredSpawn(int x, int y, PlayerSide player)
-        {
-            var newCoordinates = TransformCalculator.CalculateTransform(x, y);
-            GameObject mp = null;
-
-            // -0.5f to spawn the plate below the piece, so it doesn't interfere with collision checking on click
-            if (player == PlayerSide.White)
-            {
-                mp = Instantiate(MovePlateOrange, new Vector3(newCoordinates.X, newCoordinates.Y, -0.5f), Quaternion.identity);
-            }
-            else
-            {
-                mp = Instantiate(MovePlateBlue, new Vector3(newCoordinates.X, newCoordinates.Y, -0.5f), Quaternion.identity);
-            }
-
-            return mp;
-        }
-
-        public GameObject DirectionArrowSpawn(PossibleMove move, DirectionArrow directionArrow)
-        {
-            var vector = DirectionConverter.Convert(directionArrow.Direction);
-
-            var xCoords = move.End.X + vector.X / 2.8f;
-            var yCoords = move.End.Y + vector.Y / 2.8f;
-
-            //Debug.Log($"Spawn Arrow - {xCoords}, {yCoords}");
-
-            var coordinates = TransformCalculator.CalculateTransform(xCoords, yCoords);
-
-            GameObject arrowObj = Instantiate(DirectionArrow, new Vector3(coordinates.X, coordinates.Y, -3.5f), Quaternion.identity);
-            arrowObj.GetComponent<DirectionArrowComponent>().Initialize(directionArrow);
-
-            // float angle = Vector2.SignedAngle(new Vector2(0, 1), new Vector2(vector.X, vector.Y));
-            // arrowObj.transform.rotation = Quaternion.Euler(0, 0, angle);
-
-            // var arrow = arrowObj.GetComponent<DirectionArrowComponent>();
-            // arrow.ArrowInfo = directionArrow;
-
-            return arrowObj;
-        }
-
-        public void DestroyDirectionArrows()
-        {
-            GameObject[] directionaArrows = GameObject.FindGameObjectsWithTag("DirectionArrow");
-
-            foreach (var arrow in directionaArrows)
-            {
-                Destroy(arrow);
-            }
         }
 
         #endregion
@@ -263,17 +151,17 @@ namespace Components
             }
         }
 
-        private ChessPieceRole InitializeChessPieceRole()
+        private UnitRole InitializeChessPieceRole()
         {
             return this.name switch
             {
-                string a when a.Contains("pawn") => ChessPieceRole.Pawn,
-                string a when a.Contains("bishop") => ChessPieceRole.Bishop,
-                string a when a.Contains("knight") => ChessPieceRole.Knight,
-                string a when a.Contains("rook") => ChessPieceRole.Rook,
-                string a when a.Contains("queen") => ChessPieceRole.Queen,
-                string a when a.Contains("king") => ChessPieceRole.King,
-                _ => ChessPieceRole.Pawn,
+                string a when a.Contains("pawn") => UnitRole.Pawn,
+                string a when a.Contains("bishop") => UnitRole.Bishop,
+                string a when a.Contains("knight") => UnitRole.Knight,
+                string a when a.Contains("rook") => UnitRole.Rook,
+                string a when a.Contains("queen") => UnitRole.Queen,
+                string a when a.Contains("king") => UnitRole.King,
+                _ => UnitRole.Pawn,
             };
         }
 

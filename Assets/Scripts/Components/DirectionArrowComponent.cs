@@ -12,18 +12,17 @@ public class DirectionArrowComponent : MonoBehaviour
     {
         ArrowInfo = arrowInfo;
 
-        var vector = DirectionConverter.Convert(ArrowInfo.Direction);
+        var vector = DirectionConverter.ConvertToVector2(ArrowInfo.Direction);
 
         // Starting Vector2 is (1, 0), because base Arrow sprite is turned right by default
-        float angle = Vector2.SignedAngle(new Vector2(1, 0), new Vector2(vector.X, vector.Y));
-        this.transform.rotation = Quaternion.Euler(0, 0, angle);
+        this.transform.rotation = TransformCalculator.CalculateRotation(new Vector2(1, 0), new Vector2(vector.X, vector.Y));
     }
 
     public void Start()
     {
         var brightness = (float)Math.Sin(1.0f / ArrowInfo.Depth) + 0.1f;
         this.GetComponent<SpriteRenderer>().color = new Color(brightness, brightness, brightness);
-        Debug.Log($"Arrow brightness = {brightness}, depth = {ArrowInfo.Depth}");
+        //Debug.Log($"Arrow brightness = {brightness}, depth = {ArrowInfo.Depth}");
     }
 
     public void OnMouseUp()
@@ -36,11 +35,20 @@ public class DirectionArrowComponent : MonoBehaviour
         }
 
         var game = GameObject.FindGameObjectWithTag("GameController").GetComponent<Game>();
+        // var pieceObj = game.GetChesspiece(ArrowInfo.Move.Start.X, ArrowInfo.Move.Start.Y).GetComponent<ChessmanComponent>();
 
-        var pieceObj = game.GetChesspiece(ArrowInfo.Move.Start.X, ArrowInfo.Move.Start.Y).GetComponent<ChessmanComponent>();
-        pieceObj.DestroyMovePlates();
-        pieceObj.MoveChessPiece(ArrowInfo.Move, ArrowInfo.Direction);
+        // if (game.HighlightedMove == ArrowInfo.Move)
+        // {
+        //     game.DestroyMovePlates();
+        //     game.NextTurn().ConfigureAwait(false);
+        // }
+        // // else
+        // // {
+        // //     game.HighlightedMove = ArrowInfo.Move;
+        // // }
 
-        game.NextTurn().ConfigureAwait(false);
+        // pieceObj.Move(ArrowInfo.Move, ArrowInfo.Direction);
+
+        game.HighlightedArrow = ArrowInfo;
     }
 }
