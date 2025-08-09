@@ -15,6 +15,11 @@ public interface IChessPiece
     public Board Board { get; set; }
 
     /// <summary>
+    /// Name
+    /// </summary>
+    public string Name { get; set; }
+
+    /// <summary>
     /// Position on the board - X coordinate
     /// </summary>
     public int XBoard { get; set; }
@@ -36,7 +41,7 @@ public interface IChessPiece
     /// <summary>
     /// Marks the piece as removed
     /// </summary>
-    public bool IsRemoved { get; set; }
+    public bool IsRemoved { get; }
 
 
     // Tank stats

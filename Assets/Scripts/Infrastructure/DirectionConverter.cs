@@ -5,11 +5,13 @@ using Enums;
 using Models;
 using UnityEngine;
 
-public static class DirectionConverter
+namespace Infrastructure
 {
-    private static Dictionary<UnitDirection, (int X, int Y)> _directionToVector2 =
-        new Dictionary<UnitDirection, (int X, int Y)>()
-        {
+    public static class DirectionConverter
+    {
+        private static Dictionary<UnitDirection, (int X, int Y)> _directionToVector2 =
+            new Dictionary<UnitDirection, (int X, int Y)>()
+            {
             { UnitDirection.Up, (0, 1) },
             { UnitDirection.UpperRight, (1, 1) },
             { UnitDirection.Right, (1, 0) },
@@ -18,11 +20,11 @@ public static class DirectionConverter
             { UnitDirection.LowerLeft, (-1, -1) },
             { UnitDirection.Left, (-1, 0) },
             { UnitDirection.UpperLeft, (-1, 1) },
-        };
+            };
 
-    private static Dictionary<int, UnitDirection> _angleToDirection =
-        new Dictionary<int, UnitDirection>()
-        {
+        private static Dictionary<int, UnitDirection> _angleToDirection =
+            new Dictionary<int, UnitDirection>()
+            {
             { 0, UnitDirection.Up },
             { 45, UnitDirection.UpperRight },
             { 90, UnitDirection.Right },
@@ -31,95 +33,96 @@ public static class DirectionConverter
             { 225, UnitDirection.LowerLeft },
             { 270, UnitDirection.Left },
             { 315, UnitDirection.UpperLeft },
-        };
+            };
 
-    private static Dictionary<UnitDirection, int> _directionToAngle = _angleToDirection.ToDictionary(p => p.Value, p => p.Key);
+        private static Dictionary<UnitDirection, int> _directionToAngle = _angleToDirection.ToDictionary(p => p.Value, p => p.Key);
 
-    public static (int X, int Y) ConvertToVector2(int angle)
-    {
-        var direction = ConvertAngleToDirection(angle);
-        var vector2 = ConvertToVector2(direction);
-        return vector2;
-    }
-
-    public static (int X, int Y) ConvertToVector2(UnitDirection direction)
-    {
-        if (_directionToVector2.TryGetValue(direction, out var vector2))
+        public static (int X, int Y) ConvertToVector2(int angle)
         {
+            var direction = ConvertAngleToDirection(angle);
+            var vector2 = ConvertToVector2(direction);
             return vector2;
         }
 
-        return (0, 0);
-    }
-
-    public static UnitDirection ConvertAngleToDirection(int angle)
-    {
-        if (_angleToDirection.TryGetValue(angle, out var direction))
+        public static (int X, int Y) ConvertToVector2(UnitDirection direction)
         {
-            return direction;
+            if (_directionToVector2.TryGetValue(direction, out var vector2))
+            {
+                return vector2;
+            }
+
+            return (0, 0);
         }
 
-        return UnitDirection.Unknown;
-    }
-
-    public static int ConvertDirectionToAngle(UnitDirection direction)
-    {
-        if (_directionToAngle.TryGetValue(direction, out var angle))
+        public static UnitDirection ConvertAngleToDirection(int angle)
         {
-            return angle;
+            if (_angleToDirection.TryGetValue(angle, out var direction))
+            {
+                return direction;
+            }
+
+            return UnitDirection.Unknown;
         }
 
-        return 0;
-    }
-
-    public static UnitDirection GetOppositeDirection(UnitDirection direction)
-    {
-        _directionToAngle.TryGetValue(direction, out var angle);
-        var oppositeAngle = (angle + 180) % 360;
-        _angleToDirection.TryGetValue(oppositeAngle, out var result);
-        return result;
-    }
-
-    public static UnitDirection CalculateClosestDirection(Vector2 start, Vector2 end)
-    {
-        var baseVector2 = new Vector2(0, 1); // UP
-        var directionVector2 = end - start;
-
-        float angle = Vector2.SignedAngle(directionVector2.normalized, baseVector2);
-        if (angle < 0)
+        public static int ConvertDirectionToAngle(UnitDirection direction)
         {
-            angle += 360;
+            if (_directionToAngle.TryGetValue(direction, out var angle))
+            {
+                return angle;
+            }
+
+            return 0;
         }
 
-        // round angle to the nearest multiple of 45
-        int factor = 45;
-        int nearestMultiple = (int)Math.Round(angle / (double)factor) * factor % 360;
+        public static UnitDirection GetOppositeDirection(UnitDirection direction)
+        {
+            _directionToAngle.TryGetValue(direction, out var angle);
+            var oppositeAngle = (angle + 180) % 360;
+            _angleToDirection.TryGetValue(oppositeAngle, out var result);
+            return result;
+        }
 
-        var closestDirection = DirectionConverter.ConvertAngleToDirection(nearestMultiple);
+        public static UnitDirection CalculateClosestDirection(Vector2 start, Vector2 end)
+        {
+            var baseVector2 = new Vector2(0, 1); // UP
+            var directionVector2 = end - start;
 
-        Debug.Log($"{directionVector2.x}, {directionVector2.y} - {angle} - {closestDirection}");
+            float angle = Vector2.SignedAngle(directionVector2.normalized, baseVector2);
+            if (angle < 0)
+            {
+                angle += 360;
+            }
 
-        return closestDirection;
-    }
+            // round angle to the nearest multiple of 45
+            int factor = 45;
+            int nearestMultiple = (int)Math.Round(angle / (double)factor) * factor % 360;
 
-    public static bool IsAttackingSide(Chessman attacker, Chessman defender)
-    {
-        var directions = (UnitDirection[])Enum.GetValues(typeof(UnitDirection));
+            var closestDirection = DirectionConverter.ConvertAngleToDirection(nearestMultiple);
 
-        var directionsLength = directions.Length - 1;
+            //Debug.Log($"{directionVector2.x}, {directionVector2.y} - {angle} - {closestDirection}");
 
-        directions = directions[1..directionsLength]; // Cut out 'Unknown' direction
+            return closestDirection;
+        }
 
-        var attackerPosition = new Vector2(attacker.XBoard, attacker.YBoard);
-        var defenderPosition = new Vector2(defender.XBoard, defender.YBoard);
-        float angle = Vector2.SignedAngle(defenderPosition, attackerPosition);
+        public static bool IsAttackingSide(Chessman attacker, Chessman defender)
+        {
+            var directions = (UnitDirection[])Enum.GetValues(typeof(UnitDirection));
 
-        // Calculate the front 90 degree directions 
-        int factor = 45;
-        int attackDirection = (int)Math.Round(angle / (double)factor) % directionsLength;
-        int defenderDirection = Array.IndexOf(directions, defender.Direction);
-        var defenderFront = new int[] { (defenderDirection - 1) % directionsLength, defenderDirection, (defenderDirection + 1) % directionsLength };
+            var directionsLength = directions.Length - 1;
 
-        return !defenderFront.Contains(attackDirection);
+            directions = directions[1..directionsLength]; // Cut out 'Unknown' direction
+
+            var attackerPosition = new Vector2(attacker.XBoard, attacker.YBoard);
+            var defenderPosition = new Vector2(defender.XBoard, defender.YBoard);
+            float angle = Vector2.SignedAngle(defenderPosition, attackerPosition);
+
+            // Calculate the front 90 degree directions 
+            int factor = 45;
+            int attackDirection = (int)Math.Round(angle / (double)factor) % directionsLength;
+            int defenderDirection = Array.IndexOf(directions, defender.Direction);
+            var defenderFront = new int[] { (defenderDirection - 1) % directionsLength, defenderDirection, (defenderDirection + 1) % directionsLength };
+
+            return !defenderFront.Contains(attackDirection);
+        }
     }
 }

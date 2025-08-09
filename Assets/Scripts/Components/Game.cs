@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Algorithms;
 using Enums;
+using Infrastructure;
 using Models;
 using TMPro;
 using UnityEngine;
@@ -31,7 +32,7 @@ namespace Components
 
         private Board _board { get; set; }
 
-        private PlayerSide _currentPlayer = PlayerSide.White;
+        private PlayerSide _currentPlayer = PlayerSide.Orange;
         public PlayerSide CurrentPlayer { get => _currentPlayer; set => _currentPlayer = value; }
 
 
@@ -86,9 +87,9 @@ namespace Components
             // };
 
             _chessPieces = new List<GameObject>{
-                CreateChesspiece("white_rook", 0, 0),  CreateChesspiece("white_pawn", 1, 1), CreateChesspiece("white_pawn", 3, 1),
+                CreateChesspiece("white_rook", PlayerSide.Orange, 0, 0),  CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 1), CreateChesspiece("white_pawn", PlayerSide.Orange, 3, 1),
 
-                CreateChesspiece("black_rook", 0, 7),  CreateChesspiece("black_pawn", 1, 6), CreateChesspiece("black_pawn", 3, 6),
+                CreateChesspiece("white_rook", PlayerSide.Blue, 0, 7),  CreateChesspiece("white_pawn", PlayerSide.Blue, 1, 6), CreateChesspiece("white_pawn", PlayerSide.Blue, 3, 6),
 
                 CreateWall(5, 5), CreateWall(4, 4)
             };
@@ -106,14 +107,14 @@ namespace Components
             _opponentAlgorithm = new NegamaxAlgorithm();
         }
 
-        public GameObject CreateChesspiece(string name, int x, int y)
+        public GameObject CreateChesspiece(string spriteName, PlayerSide player, int x, int y)
         {
             GameObject obj = Instantiate(chesspiece, new Vector3(0, 0, -1), Quaternion.identity);
             ChessmanComponent cm = obj.GetComponent<ChessmanComponent>();
 
-            Console.WriteLine(name);
+            Console.WriteLine(spriteName);
 
-            cm.Activate(name, x, y, _board);
+            cm.Activate(spriteName, player, x, y, _board);
 
             _board.SetPosition(cm.PieceInfo, x, y);
 
@@ -129,7 +130,7 @@ namespace Components
 
             Console.WriteLine(wallName);
 
-            cm.Activate(wallName, x, y, _board);
+            cm.Activate(wallName, PlayerSide.NPC, x, y, _board);
 
             _board.SetPosition(cm.PieceInfo, x, y);
 
@@ -138,22 +139,35 @@ namespace Components
 
         public async Task NextTurn()
         {
-            CurrentPlayer = CurrentPlayer == PlayerSide.White
-                ? PlayerSide.Black
-                : PlayerSide.White;
+            HighlightedArrow = null;
+            HighlightedPiece = null;
 
+            // Check for win condition
+            if (_board.GetPiecesForPlayer(CurrentPlayer.GetOpposingPlayer()).Count == 0)
+            {
+                Winner(CurrentPlayer);
+                return;
+            }
+
+            CurrentPlayer = CurrentPlayer.GetOpposingPlayer();
             Debug.Log($"Next turn - player: {CurrentPlayer}");
 
-            if (CurrentPlayer == PlayerSide.Black)
+
+            if (CurrentPlayer == PlayerSide.Blue)
             {
                 if (_opponentAlgorithm != null)
                 {
-                    // var nextMove = _opponentAlgorithm.CalculateNextMove(CurrentPlayer, _board, 4);
-                    // var pieceObj = GetChesspiece(nextMove.Start.X, nextMove.Start.Y).GetComponent<ChessmanComponent>();
+                    var nextArrow = _opponentAlgorithm.CalculateNextMove(CurrentPlayer, _board, 1);
+                    var pieceObj = GetChesspiece(nextArrow.Move.Start.X, nextArrow.Move.Start.Y).GetComponent<ChessmanComponent>();
 
-                    // pieceObj.MoveChessPiece(nextMove);
+                    pieceObj.Move(nextArrow.Move, nextArrow.Direction);
 
-                    await NextTurn();
+                    if (nextArrow.Move.AttackedChessPiece != null)
+                    {
+                        PerformAttack(nextArrow.Move, nextArrow.Move.AttackedChessPiece);
+                    }
+
+                    await NextTurn().ConfigureAwait(false);
                 }
             }
         }
@@ -175,7 +189,7 @@ namespace Components
                 var component = obj.GetComponent<ChessmanComponent>();
                 var pieceInfo = (Chessman)component.PieceInfo;
                 //Debug.Log("GetChesspiece: " + component.name);
-                return pieceInfo.XBoard == x && pieceInfo.YBoard == y && pieceInfo.IsRemoved == false;
+                return pieceInfo.XBoard == x && pieceInfo.YBoard == y;
             });
         }
 
@@ -197,6 +211,8 @@ namespace Components
 
             var textRestart = GameObject.FindGameObjectWithTag("TextRestart").GetComponent<TextMeshProUGUI>();
             textRestart.enabled = true;
+
+            Debug.Log($"Winner: {playerWinner}");
         }
 
         // public void Loser(string playerLoser)
@@ -260,9 +276,22 @@ namespace Components
                 Debug.Log("Next turn");
                 // PerformShooting()
                 NextTurn().ConfigureAwait(false);
-                HighlightedArrow = null;
-                HighlightedPiece = null;
             }
+        }
+
+        public void PerformAttack(PossibleMove move, IChessPiece target)
+        {
+            var defender = _board.PerformAttack(move, target);
+            var chessObject = GetChesspiece(defender.XBoard, defender.YBoard);
+            chessObject.GetComponent<ChessmanComponent>().SetHealth();
+
+            if (defender.IsRemoved)
+            {
+                RemoveChesspiece(chessObject);
+                //_board.SetPositionEmpty(defender.XBoard, defender.YBoard);
+            }
+
+            //NextTurn().ConfigureAwait(false);
         }
 
         #endregion
@@ -348,7 +377,7 @@ namespace Components
             GameObject mp = null;
 
             // -0.5f to spawn the plate below the piece, so it doesn't interfere with collision checking on click
-            if (player == PlayerSide.White)
+            if (player == PlayerSide.Orange)
             {
                 mp = Instantiate(MovePlateOrange, new Vector3(newCoordinates.X, newCoordinates.Y, -0.5f), Quaternion.identity);
             }

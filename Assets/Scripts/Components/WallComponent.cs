@@ -1,13 +1,13 @@
 using Enums;
+using Infrastructure;
 using Models;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Components
 {
     public class WallComponent : ChessmanComponent
     {
-        public override void Activate(string name, int x, int y, Board board)
+        public override void Activate(string name, PlayerSide playerSide, int x, int y, Board board)
         {
             this.name = name;
             PieceInfo = new Wall()
@@ -16,6 +16,7 @@ namespace Components
                 YBoard = y,
                 Board = board,
                 Role = UnitRole.Wall,
+                Player = PlayerSide.NPC,
             };
 
             Debug.Log(this.name);

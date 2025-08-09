@@ -2,7 +2,8 @@ namespace Enums
 {
     public enum PlayerSide
     {
-        White,
-        Black,
+        NPC = 0,
+        Orange = 1,
+        Blue = 2,
     }
 }

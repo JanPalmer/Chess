@@ -1,6 +1,8 @@
 using System.Linq;
 using Enums;
+using Infrastructure;
 using Models;
+using TMPro;
 using UnityEngine;
 
 namespace Components
@@ -10,36 +12,42 @@ namespace Components
         // References
         public GameObject Controller { get => GameObject.FindGameObjectWithTag("GameController"); }
 
+        private static int PieceId = 1;
 
         public IChessPiece PieceInfo = null!;
 
         public SpriteLibrary SpriteLibrary;
         private GameObject _movePlateColored;
+        private Canvas _healthIndicatorCanvas;
 
         public Chessman ToChessman()
         {
             return new Chessman(PieceInfo);
         }
 
-        public virtual void Activate(string name, int x, int y, Board board)
+        public virtual void Activate(string spriteName, PlayerSide player, int x, int y, Board board)
         {
             SpriteLibrary = Controller.GetComponent<SpriteLibrary>();
 
             // take the instantianted location and adjust the transform
-            this.name = name;
+            this.name = spriteName + "-" + player + "-" + PieceId++;
             PieceInfo = new Chessman()
             {
+                Name = this.name,
                 XBoard = x,
                 YBoard = y,
-                Player = InitializePlayer(),
+                Player = player,
                 Role = InitializeChessPieceRole(),
                 Board = board,
+                Direction = (player == PlayerSide.Orange) ? UnitDirection.Up : UnitDirection.Down,
             };
+
+            PieceInfo.SetPieceStats();
 
             Debug.Log(this.name);
 
             // set sprite
-            this.GetComponent<SpriteRenderer>().sprite = SpriteLibrary.SelectSprite(this.name);
+            this.GetComponent<SpriteRenderer>().sprite = SpriteLibrary.SelectSprite(spriteName);
 
             SetCoords();
 
@@ -47,14 +55,9 @@ namespace Components
             _movePlateColored = game.MovePlateColoredSpawn(x, y, PieceInfo.Player);
             _movePlateColored.transform.SetParent(this.transform, true);
 
-            if (PieceInfo.Player == PlayerSide.White)
-            {
-                SetDirection(UnitDirection.Up);
-            }
-            else
-            {
-                SetDirection(UnitDirection.Down);
-            }
+            SetHealth();
+
+            SetDirection(PieceInfo.Direction);
         }
 
         public virtual void SetCoords()
@@ -121,6 +124,23 @@ namespace Components
             SetDirection(vector.X, vector.Y);
         }
 
+        public void SetHealth()
+        {
+            if (_healthIndicatorCanvas == null)
+            {
+                _healthIndicatorCanvas = this.GetComponentInChildren<Canvas>();
+            }
+
+            var text = _healthIndicatorCanvas.GetComponentInChildren<TextMeshProUGUI>();
+            text.text = PieceInfo.Health.ToString();
+
+            if (PieceInfo.IsRemoved)
+            {
+                var blackPieceEquivalent = "black_" + PieceInfo.Role.ToString().ToLower();
+                this.GetComponent<SpriteRenderer>().sprite = SpriteLibrary.SelectSprite(blackPieceEquivalent);
+            }
+        }
+
         /// <summary>
         /// Sets direction of the piece by inputting the coordinates on the board that it wants to look at
         /// </summary>
@@ -133,23 +153,12 @@ namespace Components
 
             // Don't rotate the attached colored MovePlate
             _movePlateColored.transform.rotation = Quaternion.identity;
+            _healthIndicatorCanvas.transform.rotation = Quaternion.identity;
         }
 
         #endregion
 
         #region Initialize
-
-        private PlayerSide InitializePlayer()
-        {
-            if (this.name.Contains("white"))
-            {
-                return PlayerSide.White;
-            }
-            else
-            {
-                return PlayerSide.Black;
-            }
-        }
 
         private UnitRole InitializeChessPieceRole()
         {
@@ -161,7 +170,7 @@ namespace Components
                 string a when a.Contains("rook") => UnitRole.Rook,
                 string a when a.Contains("queen") => UnitRole.Queen,
                 string a when a.Contains("king") => UnitRole.King,
-                _ => UnitRole.Pawn,
+                _ => UnitRole.Wall,
             };
         }
 

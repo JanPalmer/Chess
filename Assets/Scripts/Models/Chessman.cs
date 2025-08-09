@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Components;
 using Enums;
+using Infrastructure;
 using UnityEngine;
 
 namespace Models
@@ -13,6 +14,8 @@ namespace Models
 
         public Board Board { get; set; }
 
+        public string Name { get; set; }
+
         public int XBoard { get; set; } = -1;
 
         public int YBoard { get; set; } = -1;
@@ -21,12 +24,12 @@ namespace Models
 
         public UnitRole Role { get; set; }
 
-        public bool IsRemoved { get; set; } = false;
+        public bool IsRemoved { get => Health <= 0; }
 
 
         // Tank stats
 
-        private int _health;
+        private int _health = 3;
         public int Health
         {
             get => _health;
@@ -45,9 +48,9 @@ namespace Models
 
         public int Movement { get; set; }
 
-        public int Firepower { get; set; }
+        public int Firepower { get; set; } = 4;
 
-        public int Survivability { get; set; }
+        public int Survivability { get; set; } = 2;
 
         public UnitDirection Direction { get; set; } = UnitDirection.Up;
 
@@ -63,7 +66,10 @@ namespace Models
             YBoard = toCopy.YBoard;
             Player = toCopy.Player;
             Role = toCopy.Role;
-            IsRemoved = toCopy.IsRemoved;
+            Health = toCopy.Health;
+            Movement = toCopy.Movement;
+            Firepower = toCopy.Firepower;
+            Survivability = toCopy.Survivability;
             Board = board;
             Direction = toCopy.Direction;
         }
@@ -74,7 +80,10 @@ namespace Models
             YBoard = toCopy.YBoard;
             Player = toCopy.Player;
             Role = toCopy.Role;
-            IsRemoved = toCopy.IsRemoved;
+            Health = toCopy.Health;
+            Movement = toCopy.Movement;
+            Firepower = toCopy.Firepower;
+            Survivability = toCopy.Survivability;
             Board = board;
             Direction = toCopy.Direction;
         }
@@ -85,7 +94,10 @@ namespace Models
             YBoard = toCopy.PieceInfo.YBoard;
             Player = toCopy.PieceInfo.Player;
             Role = toCopy.PieceInfo.Role;
-            IsRemoved = toCopy.PieceInfo.IsRemoved;
+            Health = toCopy.PieceInfo.Health;
+            Movement = toCopy.PieceInfo.Movement;
+            Firepower = toCopy.PieceInfo.Firepower;
+            Survivability = toCopy.PieceInfo.Survivability;
             Board = board;
             Direction = toCopy.PieceInfo.Direction;
         }
@@ -236,8 +248,6 @@ namespace Models
             }
 
             var resultMoves = resultArrows.Select(x => x.Move).ToList();
-
-
 
             return resultMoves;
         }

@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using Enums;
 using Models;
+using Unity.VisualScripting;
 
 public class DirectionArrow
 {
@@ -22,5 +24,32 @@ public class DirectionArrow
         return this.Move.Equals(arrowToCheck.Move)
             && this.Direction == arrowToCheck.Direction
             && this.Depth == arrowToCheck.Depth;
+    }
+
+    public DirectionArrow() { }
+
+    public DirectionArrow(DirectionArrow toCopy)
+    {
+        Direction = toCopy.Direction;
+        Depth = toCopy.Depth;
+        Move = new PossibleMove(toCopy.Move);
+    }
+
+    public DirectionArrow(
+        UnitDirection direction,
+        int depth,
+        Chessman chessPiece,
+        int xStart,
+        int yStart,
+        int xEnd,
+        int yEnd,
+        IEnumerable<DirectionArrow> directions,
+        List<(IChessPiece PossibleTarget, UnitVisibility Visibility)> targets,
+        Chessman attackedChessPiece = null,
+        int attackedChessPieceHealthLost = 0)
+    {
+        Direction = direction;
+        Depth = depth;
+        Move = new PossibleMove(chessPiece, xStart, yStart, xEnd, yEnd, directions, targets, attackedChessPiece, attackedChessPieceHealthLost);
     }
 }

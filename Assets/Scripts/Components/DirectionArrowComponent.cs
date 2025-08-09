@@ -1,7 +1,6 @@
 using System;
 using Components;
-using Enums;
-using Models;
+using Infrastructure;
 using UnityEngine;
 
 public class DirectionArrowComponent : MonoBehaviour

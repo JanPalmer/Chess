@@ -1,9 +1,5 @@
 using System.Collections.Generic;
-using System.Linq;
 using Enums;
-using Unity.VisualScripting;
-using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace Models
 {
@@ -18,11 +14,24 @@ namespace Models
 
         // RemovedChessPiece is used as a flag for whether the move is an attack move or not
         // Don't use other constructors if the move is an attack move
-        public readonly Chessman RemovedChessPiece = null;
-        public readonly UnitVisibility TargetVisibility;
+        public Chessman AttackedChessPiece = null;
+        public int AttackedChessPieceHealthLost = 0;
+
+        private List<(IChessPiece PossibleTarget, UnitVisibility Visibility)> _targets;
 
         // not readonly, as it's assigned later
-        public List<(IChessPiece PossibleTarget, UnitVisibility Visibility)> Targets = null;
+        public List<(IChessPiece PossibleTarget, UnitVisibility Visibility)> Targets
+        {
+            get => _targets;
+            set
+            {
+                // if (value == null || value.Count == 0)
+                // {
+                //     Debug.Log("Targets: 0");
+                // }
+                _targets = value;
+            }
+        }
 
         public readonly List<DirectionArrow> Directions;
 
@@ -50,8 +59,15 @@ namespace Models
             StartingDirection = moveToCopy.ChessPiece.Direction;
             Start = (moveToCopy.Start.X, moveToCopy.Start.Y);
             End = (moveToCopy.End.X, moveToCopy.End.Y);
+            AttackedChessPiece = moveToCopy.AttackedChessPiece;
+            AttackedChessPieceHealthLost = moveToCopy.AttackedChessPieceHealthLost;
             Targets = new List<(IChessPiece PossibleTarget, UnitVisibility Visibility)>(moveToCopy.Targets);
             Directions = CopyDirectionArrows(moveToCopy.Directions);
+
+            // if (Targets == null || Targets.Count == 0)
+            // {
+            //     Debug.Log("Targets: 0");
+            // }
         }
 
         public PossibleMove(Chessman chessPiece, int xEnd, int yEnd, IEnumerable<UnitDirection> directions)
@@ -74,17 +90,23 @@ namespace Models
 
         public PossibleMove(
             Chessman chessPiece,
+            int xStart,
+            int yStart,
             int xEnd,
             int yEnd,
-            IEnumerable<UnitDirection> directions,
-            List<(IChessPiece PossibleTarget, UnitVisibility Visibility)> targets)
+            IEnumerable<DirectionArrow> directions,
+            List<(IChessPiece PossibleTarget, UnitVisibility Visibility)> targets,
+            Chessman attackedChessPiece = null,
+            int attackedChessPieceHealthLost = 0)
         {
             ChessPiece = chessPiece;
             StartingDirection = chessPiece.Direction;
-            Start = (chessPiece.XBoard, chessPiece.YBoard);
+            Start = (xStart, yStart);
             End = (xEnd, yEnd);
             Targets = targets;
-            Directions = CreateDirectionArrows(directions);
+            Directions = CopyDirectionArrows(directions);
+            AttackedChessPiece = attackedChessPiece;
+            AttackedChessPieceHealthLost = attackedChessPieceHealthLost;
         }
 
         private List<DirectionArrow> CreateDirectionArrows(IEnumerable<UnitDirection> directions)
@@ -104,13 +126,13 @@ namespace Models
             return result;
         }
 
-        private List<DirectionArrow> CopyDirectionArrows(List<DirectionArrow> toCopy)
+        private List<DirectionArrow> CopyDirectionArrows(IEnumerable<DirectionArrow> toCopy)
         {
             var result = new List<DirectionArrow>();
 
             foreach (var arrow in toCopy)
             {
-                Directions.Add(CopyDirectionArrow(arrow));
+                result.Add(CopyDirectionArrow(arrow));
             }
 
             return result;

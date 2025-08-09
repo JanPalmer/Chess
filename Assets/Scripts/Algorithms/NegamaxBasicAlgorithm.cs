@@ -32,7 +32,7 @@ namespace Algorithms
         private PossibleMove _bestMove;
 
 
-        public PossibleMove CalculateNextMove(
+        public DirectionArrow CalculateNextMove(
             PlayerSide player,
             Board board,
             int maxDepth = 2)
@@ -154,9 +154,9 @@ namespace Algorithms
             foreach (var move in moves)
             {
                 var chesspieceRole = UnitRole.Unknown;
-                if (move.RemovedChessPiece != null)
+                if (move.AttackedChessPiece != null)
                 {
-                    chesspieceRole = move.RemovedChessPiece.Role;
+                    chesspieceRole = move.AttackedChessPiece.Role;
                 }
 
                 var modifier = (move.ChessPiece.Player == _originalPlayer) ? 1 : -1;
@@ -169,7 +169,7 @@ namespace Algorithms
 
         private void MakeMove(PossibleMove move)
         {
-            if (move.RemovedChessPiece != null && move.RemovedChessPiece.Role == UnitRole.King)
+            if (move.AttackedChessPiece != null && move.AttackedChessPiece.Role == UnitRole.King)
             {
                 _isGameOver = true;
             }
@@ -179,7 +179,7 @@ namespace Algorithms
 
         private void UndoMove(PossibleMove move)
         {
-            if (move.RemovedChessPiece != null && move.RemovedChessPiece.Role == UnitRole.King)
+            if (move.AttackedChessPiece != null && move.AttackedChessPiece.Role == UnitRole.King)
             {
                 _isGameOver = false;
             }

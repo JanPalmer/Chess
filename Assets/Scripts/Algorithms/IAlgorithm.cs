@@ -5,7 +5,7 @@ namespace Algorithms
 {
     public interface IAlgorithm
     {
-        public PossibleMove CalculateNextMove(
+        public DirectionArrow CalculateNextMove(
             PlayerSide player,
             Board board,
             int maxDepth);

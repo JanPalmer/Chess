@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using Components;
 using Enums;
+using Infrastructure;
 using Models;
 using Mono.Cecil;
 using Unity.Collections;
@@ -19,29 +21,30 @@ public class Board
     // doesn't contain Walls and Unknowns
     private List<IChessPiece> Pieces { get; } = new List<IChessPiece>(32);
 
-    private void TryClearPieces(int x, int y)
+    private void TryClearPiece(int x, int y)
     {
         // Remove piece at current position
         var possiblePiece = GetPosition(x, y);
         if (possiblePiece != null)
         {
+            //Debug.Log($"Removed {possiblePiece.Name}");
             Pieces.Remove(possiblePiece);
         }
     }
 
-    private void TryAddPieces(IChessPiece piece)
+    private void TryAddPiece(IChessPiece piece)
     {
-        if (!Pieces.Contains(piece)
-            && (piece.Role != UnitRole.Wall || piece.Role != UnitRole.Unknown))
+        if (!Pieces.Contains(piece) && piece.Role != UnitRole.Wall && piece.Role != UnitRole.Unknown)
         {
+            //Debug.Log($"Added {piece.Name}");
             Pieces.Add(piece);
         }
     }
 
     public void SetPosition(IChessPiece chesspiece, int x, int y)
     {
-        TryClearPieces(x, y);
-        TryAddPieces(chesspiece);
+        TryClearPiece(x, y);
+        TryAddPiece(chesspiece);
 
         chesspiece.XBoard = x;
         chesspiece.YBoard = y;
@@ -57,7 +60,7 @@ public class Board
 
     public void SetPositionEmpty(int x, int y)
     {
-        TryClearPieces(x, y);
+        TryClearPiece(x, y);
 
         Positions[x, y] = null;
     }
@@ -81,36 +84,60 @@ public class Board
     {
         //Debug.Log($"Move - {move.Start.X}, {move.Start.Y} -> {move.End.X}, {move.End.Y}");
 
-        SetPosition(move.ChessPiece, move.End.X, move.End.Y);
-        SetPositionEmpty(move.Start.X, move.Start.Y);
-
-        if (move.RemovedChessPiece != null)
+        if (move.Start.X != move.End.X || move.Start.Y != move.End.Y)
         {
-            move.RemovedChessPiece.IsRemoved = true;
-            //Debug.Log($"Removed {move.RemovedChessPiece.Role}");
+            SetPositionEmpty(move.Start.X, move.Start.Y);
+            SetPosition(move.ChessPiece, move.End.X, move.End.Y);
         }
+
+        // if (move.RemovedChessPiece != null)
+        // {
+        //     move.RemovedChessPiece.IsRemoved = true;
+        //     //Debug.Log($"Removed {move.RemovedChessPiece.Role}");
+        // }
 
         move.ChessPiece.Direction = direction;
 
-        return move.RemovedChessPiece;
+        return move.ChessPiece;
     }
 
     public Chessman UndoMove(PossibleMove move)
     {
         //Debug.Log($"Undoing move - {move.Start.X}, {move.Start.Y} -> {move.End.X}, {move.End.Y}");
 
-        SetPosition(move.ChessPiece, move.Start.X, move.Start.Y);
-        SetPositionEmpty(move.End.X, move.End.Y);
-
-        if (move.RemovedChessPiece != null)
+        if (move.Start.X != move.End.X || move.Start.Y != move.End.Y)
         {
-            move.RemovedChessPiece.IsRemoved = false;
-            SetPosition(move.RemovedChessPiece, move.End.X, move.End.Y);
+            SetPositionEmpty(move.End.X, move.End.Y);
+            SetPosition(move.ChessPiece, move.Start.X, move.Start.Y);
+        }
+
+        if (move.AttackedChessPiece != null)
+        {
+            if (move.AttackedChessPiece.IsRemoved)
+            {
+                SetPosition(move.AttackedChessPiece, move.AttackedChessPiece.XBoard, move.AttackedChessPiece.YBoard);
+            }
+            //move.AttackedChessPiece.IsRemoved = false;
+            move.AttackedChessPiece.Health += move.AttackedChessPieceHealthLost;
         }
 
         move.ChessPiece.Direction = move.StartingDirection;
+        move.AttackedChessPiece = null;
+        move.AttackedChessPieceHealthLost = 0;
 
-        return move.RemovedChessPiece;
+        return move.AttackedChessPiece;
+    }
+
+    public List<IChessPiece> GetAllPieces()
+    {
+        return Pieces.Where(x => x.IsRemoved == false).ToList();
+    }
+
+    public List<IChessPiece> GetPiecesForPlayer(PlayerSide player)
+    {
+        return Pieces.Where(x =>
+            x.Player == player
+            && x.IsRemoved == false).ToList();
     }
 
     public void GetPossibleTargets(List<PossibleMove> possibleMoves)
@@ -124,12 +151,12 @@ public class Board
     public void GetPossibleTargets(PossibleMove possibleMove)
     {
         var attacker = possibleMove.ChessPiece;
-        var possibleTargets = Pieces.Where(x => x.Player != attacker.Player).ToList();
+        var possibleTargets = GetPiecesForPlayer(possibleMove.ChessPiece.Player.GetOpposingPlayer());
         var result = new List<(IChessPiece PossibleTarget, UnitVisibility Visibility)>();
 
         foreach (var target in possibleTargets)
         {
-            Debug.Log($"Checking visibility: Start: {possibleMove.End.X},{possibleMove.End.Y} - target {target.Role}, {target.XBoard}, {target.YBoard}");
+            //Debug.Log($"Checking visibility: Start: {possibleMove.End.X},{possibleMove.End.Y} - target {target.Role}, {target.XBoard}, {target.YBoard}");
 
             // Calculate visibility from the end of the move, so where the piece would end up
             var visibility = DetermineLineOfSight(possibleMove.End, possibleMove.ChessPiece, target);
@@ -160,8 +187,8 @@ public class Board
         {
             positionsToCheck.Add((defender.XBoard, defender.YBoard));
         }
-        Debug.Log($"Closest direction: {directionOfAttack}\n" +
-            $"Checking visibility for tiles: {positionsToCheck.First().X}, {positionsToCheck.First().Y} and {positionsToCheck.Last().X}, {positionsToCheck.Last().Y}");
+        // Debug.Log($"Closest direction: {directionOfAttack}\n" +
+        //     $"Checking visibility for tiles: {positionsToCheck.First().X}, {positionsToCheck.First().Y} and {positionsToCheck.Last().X}, {positionsToCheck.Last().Y}");
 
         var visibilityChecks = new List<bool>();
         foreach (var position in positionsToCheck)
@@ -260,7 +287,7 @@ public class Board
             }
             else
             {
-                Debug.Log($"Not on board: {x1}, {y1}. Start {start.X}, {start.Y}, End {end.X}, {end.Y}");
+                //Debug.Log($"Not on board: {x1}, {y1}. Start {start.X}, {start.Y}, End {end.X}, {end.Y}");
 
                 return false;
             }
@@ -270,18 +297,27 @@ public class Board
     }
 
 
-    public IChessPiece PerformAttack(PossibleMove move)
+    public IChessPiece PerformAttack(PossibleMove move, IChessPiece target)
     {
-        if (move.RemovedChessPiece == null)
+        var targetTuple = move.Targets.Find(x => x.PossibleTarget == target);
+
+        var unitToAttack = GetPosition(target.XBoard, target.YBoard);
+        if (unitToAttack == null || targetTuple.PossibleTarget == null || targetTuple.Visibility == UnitVisibility.NotVisible)
         {
             return null;
         }
 
         var attackDiceToThrow = move.ChessPiece.Firepower;
-        var defenseDiceToThrow = move.RemovedChessPiece.Survivability;
+        var defenseDiceToThrow = unitToAttack.Survivability;
+
+        // If target is not fully visible, treat it as having cover
+        if (targetTuple.Visibility == UnitVisibility.InCover)
+        {
+            defenseDiceToThrow++;
+        }
 
         // Calculate if attacker is striking from a flank
-        if (DirectionConverter.IsAttackingSide(move.ChessPiece, move.RemovedChessPiece)
+        if (DirectionConverter.IsAttackingSide(move.ChessPiece, unitToAttack as Chessman)
             && defenseDiceToThrow > 0)
         {
             defenseDiceToThrow--;
@@ -296,7 +332,7 @@ public class Board
         foreach (var attack in attackThrowResults)
         {
             // If dice results are the same, or defense is higher than attack, discards both dice
-            if (attack <= defenseThrowResults[defenseDiceIndex])
+            if (defenseDiceIndex < defenseThrowResults.Count() && attack <= defenseThrowResults[defenseDiceIndex])
             {
                 defenseDiceIndex++;
                 continue;
@@ -308,8 +344,40 @@ public class Board
             }
         }
 
-        move.RemovedChessPiece.Health -= damageDealt;
+        unitToAttack.Health -= damageDealt;
 
-        return move.RemovedChessPiece;
+        Debug.Log($"Damage dealt: {damageDealt}");
+
+        // for testing purposes
+        //unitToAttack.Health -= unitToAttack.Health;
+
+        move.AttackedChessPiece = unitToAttack as Chessman;
+        move.AttackedChessPieceHealthLost = damageDealt;
+
+        return unitToAttack;
+    }
+
+    public override string ToString()
+    {
+        var result = "";
+
+        for (int y = Positions.GetLength(1) - 1; y >= 0; y--)
+        {
+            for (int x = 0; x < Positions.GetLength(0); x++)
+            {
+                var piece = GetPosition(x, y);
+                if (piece != null)
+                {
+                    result += (int)piece.Role + " ";
+                }
+                else
+                {
+                    result += "- ";
+                }
+            }
+            result += '\n';
+        }
+
+        return result;
     }
 }

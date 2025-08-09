@@ -6,7 +6,7 @@ namespace Components
 {
     public class MovePlate : MonoBehaviour
     {
-        public GameObject controller = null;
+        public GameObject Controller { get => GameObject.FindGameObjectWithTag("GameController"); }
 
         // private GameObject _pieceReference = null!;
         // public GameObject PieceReference { get => _pieceReference; set { _pieceReference = value; } }
@@ -46,7 +46,7 @@ namespace Components
             if (Target != null)
             {
                 // Change to red color, based on visibility
-                gameObject.GetComponent<SpriteRenderer>().color = TargetVisibility switch
+                this.GetComponent<SpriteRenderer>().color = TargetVisibility switch
                 {
                     UnitVisibility.FullyVisible => new Color(1.0f, 0, 0), // vibrant red                    
                     UnitVisibility.InCover => new Color(0.6f, 0, 0), // darker shade of red
@@ -55,6 +55,15 @@ namespace Components
             }
 
             //Debug.Log($"MovePlate-Activate(): Target {Target.XBoard}, {Target.YBoard}, Visibility: {TargetVisibility}");
+        }
+
+        public void OnMouseUp()
+        {
+            if (Target != null)
+            {
+                Controller.GetComponent<Game>().PerformAttack(Move, Target);
+                Controller.GetComponent<Game>().NextTurn().ConfigureAwait(false);
+            }
         }
     }
 }
