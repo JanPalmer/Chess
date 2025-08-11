@@ -15,11 +15,19 @@ using UnityEngine.Analytics;
 [CreateAssetMenu(fileName = "Board", menuName = "Scriptable Objects/Board")]
 public class Board
 {
-    public IChessPiece[,] Positions { get; set; } = new IChessPiece[8, 8];
+    public IChessPiece[,] Positions { get; set; } = new IChessPiece[16, 10];
 
     // more of lookup tables to speed up searching, instead of looking through all fields in Positions
     // doesn't contain Walls and Unknowns
     private List<IChessPiece> Pieces { get; } = new List<IChessPiece>(32);
+
+    public void ReadyPieces(bool statusToSet = true)
+    {
+        foreach (var piece in Pieces.Where(x => x.IsRemoved == false))
+        {
+            piece.IsReady = statusToSet;
+        }
+    }
 
     private void TryClearPiece(int x, int y)
     {
@@ -80,6 +88,20 @@ public class Board
         return true;
     }
 
+    public void SetPieceAsRemoved(IChessPiece piece, bool reverseAction = false)
+    {
+        if (reverseAction == false)
+        {
+            Pieces.Remove(piece);
+        }
+        else
+        {
+            Pieces.Add(piece);
+        }
+
+        piece.IsReady = false;
+    }
+
     public Chessman MoveChessPiece(PossibleMove move, UnitDirection direction)
     {
         //Debug.Log($"Move - {move.Start.X}, {move.Start.Y} -> {move.End.X}, {move.End.Y}");
@@ -97,6 +119,13 @@ public class Board
         // }
 
         move.ChessPiece.Direction = direction;
+        move.ChessPiece.IsReady = false;
+
+        var activePieces = GetReadyPieces();
+        if (activePieces == null || activePieces.Count == 0)
+        {
+            ReadyPieces();
+        }
 
         return move.ChessPiece;
     }
@@ -115,13 +144,21 @@ public class Board
         {
             if (move.AttackedChessPiece.IsRemoved)
             {
-                SetPosition(move.AttackedChessPiece, move.AttackedChessPiece.XBoard, move.AttackedChessPiece.YBoard);
+                //SetPosition(move.AttackedChessPiece, move.AttackedChessPiece.XBoard, move.AttackedChessPiece.YBoard);
+                SetPieceAsRemoved(move.AttackedChessPiece, true);
             }
             //move.AttackedChessPiece.IsRemoved = false;
+
             move.AttackedChessPiece.Health += move.AttackedChessPieceHealthLost;
         }
 
+        if (AreAllPiecesReady())
+        {
+            ReadyPieces(false);
+        }
+
         move.ChessPiece.Direction = move.StartingDirection;
+        move.ChessPiece.IsReady = true;
         move.AttackedChessPiece = null;
         move.AttackedChessPieceHealthLost = 0;
 
@@ -130,14 +167,39 @@ public class Board
 
     public List<IChessPiece> GetAllPieces()
     {
-        return Pieces.Where(x => x.IsRemoved == false).ToList();
+        return Pieces.Where(x => x.IsRemoved == false)?.ToList();
+    }
+
+    public List<IChessPiece> GetReadyPieces()
+    {
+        return Pieces.Where(x => x.IsRemoved == false && x.IsReady)?.ToList();
     }
 
     public List<IChessPiece> GetPiecesForPlayer(PlayerSide player)
     {
-        return Pieces.Where(x =>
-            x.Player == player
-            && x.IsRemoved == false).ToList();
+        return GetAllPieces()?.Where(x => x.Player == player)?.ToList();
+    }
+
+    public List<IChessPiece> GetReadyPiecesForPlayer(PlayerSide player)
+    {
+        return GetReadyPieces()?.Where(x => x.Player == player)?.ToList();
+    }
+
+    public bool AreAllPiecesReady()
+    {
+        var players = new List<PlayerSide>() { PlayerSide.Orange, PlayerSide.Blue };
+        var result = true;
+
+        foreach (var player in players)
+        {
+            if (GetReadyPiecesForPlayer(player).Count != GetPiecesForPlayer(player).Count)
+            {
+                result = false;
+                break;
+            }
+        }
+
+        return result;
     }
 
     public void GetPossibleTargets(List<PossibleMove> possibleMoves)
@@ -150,7 +212,7 @@ public class Board
 
     public void GetPossibleTargets(PossibleMove possibleMove)
     {
-        var attacker = possibleMove.ChessPiece;
+        //var attacker = possibleMove.ChessPiece;
         var possibleTargets = GetPiecesForPlayer(possibleMove.ChessPiece.Player.GetOpposingPlayer());
         var result = new List<(IChessPiece PossibleTarget, UnitVisibility Visibility)>();
 
@@ -280,8 +342,13 @@ public class Board
             {
                 var boardPosition = GetPosition(x1, y1);
                 // If there is anything in the way, stop calculating the ray
-                if (boardPosition != null && boardPosition != target && boardPosition != attacker)
+                if (boardPosition != null && boardPosition != attacker)
                 {
+                    if (boardPosition == target)
+                    {
+                        return true;
+                    }
+
                     return false;
                 }
             }
@@ -353,6 +420,11 @@ public class Board
 
         move.AttackedChessPiece = unitToAttack as Chessman;
         move.AttackedChessPieceHealthLost = damageDealt;
+
+        if (move.AttackedChessPiece.IsRemoved)
+        {
+            SetPieceAsRemoved(move.AttackedChessPiece);
+        }
 
         return unitToAttack;
     }

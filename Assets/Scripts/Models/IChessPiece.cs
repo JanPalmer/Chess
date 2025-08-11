@@ -43,6 +43,8 @@ public interface IChessPiece
     /// </summary>
     public bool IsRemoved { get; }
 
+    public bool IsReady { get; set; }
+
 
     // Tank stats
     public int Health { get; set; }

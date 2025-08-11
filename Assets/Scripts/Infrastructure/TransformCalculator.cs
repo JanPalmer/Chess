@@ -9,8 +9,8 @@ namespace Infrastructure
         {
             x *= 0.66f;
             y *= 0.66f;
-            x += -2.3f;
-            y += -2.3f;
+            x += -2.3f - 2.64f;
+            y += -2.3f - 0.65f;
 
             return (x, y);
         }

@@ -23,6 +23,8 @@ namespace Components
         public GameObject MovePlateBlue;
         public GameObject DirectionArrow;
 
+        private const int TreeSearchDepth = 2;
+
         // Positions and team for each chess piece
         //private GameObject[,] positions = new GameObject[8, 8];
         // private GameObject[] playerBlack = new GameObject[16];
@@ -87,11 +89,22 @@ namespace Components
             // };
 
             _chessPieces = new List<GameObject>{
-                CreateChesspiece("white_rook", PlayerSide.Orange, 0, 0),  CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 1), CreateChesspiece("white_pawn", PlayerSide.Orange, 3, 1),
+                CreateChesspiece("white_rook", PlayerSide.Orange, 1, 6),  CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 4),
+                CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 2),
 
-                CreateChesspiece("white_rook", PlayerSide.Blue, 0, 7),  CreateChesspiece("white_pawn", PlayerSide.Blue, 1, 6), CreateChesspiece("white_pawn", PlayerSide.Blue, 3, 6),
+                CreateChesspiece("white_rook", PlayerSide.Blue, 14, 6),  CreateChesspiece("white_pawn", PlayerSide.Blue, 14, 4),
+                CreateChesspiece("white_pawn", PlayerSide.Blue, 14, 2),
 
-                CreateWall(5, 5), CreateWall(4, 4)
+                CreateWall(4, 2), CreateWall(4, 1), CreateWall(5, 1), // lower left corner
+                CreateWall(3, 8), CreateWall(3, 7), CreateWall(4, 8), // upper left corner
+                CreateWall(10, 8), CreateWall(11, 8), CreateWall(11, 7), // upper right corner
+                CreateWall(11, 1), CreateWall(12, 1), CreateWall(12, 2), // lower right corner
+                
+                CreateWall(7, 7), CreateWall(8, 7), CreateWall(6, 6), CreateWall(7, 6),
+                CreateWall(5, 5), CreateWall(6, 5), CreateWall(6, 4),
+
+                CreateWall(9,5), CreateWall(9, 4), CreateWall(10, 4), CreateWall(8, 3),
+                CreateWall(9, 3), CreateWall(7, 2), CreateWall(8, 2),
             };
 
             // foreach (var piece in playerWhite)
@@ -142,6 +155,10 @@ namespace Components
             HighlightedArrow = null;
             HighlightedPiece = null;
 
+            UpdateMovePlatesForPieces();
+
+            var pieces = _board.GetAllPieces();
+
             // Check for win condition
             if (_board.GetPiecesForPlayer(CurrentPlayer.GetOpposingPlayer()).Count == 0)
             {
@@ -149,7 +166,19 @@ namespace Components
                 return;
             }
 
-            CurrentPlayer = CurrentPlayer.GetOpposingPlayer();
+            // if a new turn has started and all pieces are ready, always start from the Orange player
+            if (_board.AreAllPiecesReady())
+            {
+                CurrentPlayer = PlayerSide.Orange;
+                return;
+            }
+
+            // If the opposing player has already moved with all of his pieces, don't swap player to allow for chain movements
+            if (_board.GetReadyPiecesForPlayer(CurrentPlayer.GetOpposingPlayer()).Count > 0)
+            {
+                CurrentPlayer = CurrentPlayer.GetOpposingPlayer();
+            }
+
             Debug.Log($"Next turn - player: {CurrentPlayer}");
 
 
@@ -157,7 +186,7 @@ namespace Components
             {
                 if (_opponentAlgorithm != null)
                 {
-                    var nextArrow = _opponentAlgorithm.CalculateNextMove(CurrentPlayer, _board, 1);
+                    var nextArrow = _opponentAlgorithm.CalculateNextMove(CurrentPlayer, _board, TreeSearchDepth);
                     var pieceObj = GetChesspiece(nextArrow.Move.Start.X, nextArrow.Move.Start.Y).GetComponent<ChessmanComponent>();
 
                     pieceObj.Move(nextArrow.Move, nextArrow.Direction);
@@ -166,6 +195,8 @@ namespace Components
                     {
                         PerformAttack(nextArrow.Move, nextArrow.Move.AttackedChessPiece);
                     }
+
+                    await Task.Delay(500);
 
                     await NextTurn().ConfigureAwait(false);
                 }
@@ -196,9 +227,9 @@ namespace Components
         public void RemoveChesspiece(GameObject chesspiece)
         {
             var pieceInfo = chesspiece.GetComponent<ChessmanComponent>().PieceInfo;
-            _board.SetPositionEmpty(pieceInfo.XBoard, pieceInfo.YBoard);
-            _chessPieces.Remove(chesspiece);
-            Destroy(chesspiece);
+            // _board.SetPositionEmpty(pieceInfo.XBoard, pieceInfo.YBoard);
+            // _chessPieces.Remove(chesspiece);
+            // Destroy(chesspiece);
         }
 
         public void Winner(PlayerSide playerWinner)
@@ -387,6 +418,15 @@ namespace Components
             }
 
             return mp;
+        }
+
+        public void UpdateMovePlatesForPieces()
+        {
+            foreach (var piece in _chessPieces)
+            {
+                var chessmanComp = piece.GetComponent<ChessmanComponent>();
+                chessmanComp.UpdateReadyColor();
+            }
         }
 
         public GameObject DirectionArrowSpawn(PossibleMove move, DirectionArrow directionArrow)

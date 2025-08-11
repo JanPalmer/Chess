@@ -40,5 +40,10 @@ namespace Components
         {
             return;
         }
+
+        public override void UpdateReadyColor()
+        {
+            return;
+        }
     }
 }

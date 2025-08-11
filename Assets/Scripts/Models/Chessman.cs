@@ -26,6 +26,8 @@ namespace Models
 
         public bool IsRemoved { get => Health <= 0; }
 
+        public bool IsReady { get; set; } = true;
+
 
         // Tank stats
 
@@ -72,6 +74,7 @@ namespace Models
             Survivability = toCopy.Survivability;
             Board = board;
             Direction = toCopy.Direction;
+            IsReady = toCopy.IsReady;
         }
 
         public Chessman(Chessman toCopy, Board board = null)
@@ -86,6 +89,7 @@ namespace Models
             Survivability = toCopy.Survivability;
             Board = board;
             Direction = toCopy.Direction;
+            IsReady = toCopy.IsReady;
         }
 
         public Chessman(ChessmanComponent toCopy, Board board = null)
@@ -100,6 +104,7 @@ namespace Models
             Survivability = toCopy.PieceInfo.Survivability;
             Board = board;
             Direction = toCopy.PieceInfo.Direction;
+            IsReady = toCopy.PieceInfo.IsReady;
         }
 
         #endregion

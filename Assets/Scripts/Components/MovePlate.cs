@@ -25,16 +25,20 @@ namespace Components
         public IChessPiece Target { get; set; } = null;
         public UnitVisibility TargetVisibility { get; set; } = UnitVisibility.NotVisible;
 
+        public Color ColorBase;
+        public Color ColorDark;
+
         public void Start()
         {
-
-            // else
-            // {
-            //     gameObject.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1);
-            // }
-
+            ColorBase = gameObject.GetComponent<SpriteRenderer>().color;
+            ColorDark = new Color(ColorBase.r * 0.6f, ColorBase.g * 0.6f, ColorBase.b * 0.6f);
 
             return;
+        }
+
+        public void SwapColor(Color color)
+        {
+            gameObject.GetComponent<SpriteRenderer>().color = color;
         }
 
         public void Activate(PossibleMove move, IChessPiece target = null, UnitVisibility targetVisibility = UnitVisibility.NotVisible)

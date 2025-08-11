@@ -74,11 +74,11 @@ namespace Algorithms
 
             Debug.Log(_simulatedBoard.ToString());
 
-            Debug.Log("Starting NegaMax");
+            Debug.Log("Starting NegaMax with alpha-beta pruning");
 
             NegaMax(new List<DirectionArrow>(), int.MinValue, int.MaxValue);
 
-            Debug.Log("Finished NegaMax");
+            Debug.Log("Finished NegaMax with alpha-beta pruning");
 
             if (_bestArrow == null)
             {
@@ -251,36 +251,17 @@ namespace Algorithms
         private int Evaluate(IEnumerable<DirectionArrow> arrows)
         {
             var result = 0;
-
-            // foreach (var arrow in arrows)
-            // {
-            //     var chesspieceRole = UnitRole.Unknown;
-            //     if (arrow.Move.AttackedChessPiece != null)
-            //     {
-            //         chesspieceRole = arrow.Move.AttackedChessPiece.Role;
-            //     }
-
-            //     result += (arrow.Move.ChessPiece.Player == _originalPlayer) ? _pieceValues[chesspieceRole] : -_pieceValues[chesspieceRole];
-            // }
-
-            // var lastArrow = arrows.Last();
-            // var chesspieceRole = UnitRole.Unknown;
-            // if (lastArrow.Move.AttackedChessPiece != null)
-            // {
-            //     chesspieceRole = lastArrow.Move.AttackedChessPiece.Role;
-            // }
-
-            // result += (lastArrow.Move.ChessPiece.Player == _originalPlayer) ? _pieceValues[chesspieceRole] : -_pieceValues[chesspieceRole];
+            var playerToEvaluateFor = arrows.Last().Move.ChessPiece.Player.GetOpposingPlayer();
 
             foreach (var piece in _simulatedBoard.GetAllPieces())
             {
-                if (piece.Player == arrows.Last().Move.ChessPiece.Player)
+                if (piece.Player == playerToEvaluateFor)
                 {
-                    result -= _pieceValues[piece.Role] * piece.Health;
+                    result += _pieceValues[piece.Role] * piece.Health;
                 }
                 else
                 {
-                    result += _pieceValues[piece.Role] * piece.Health;
+                    result -= _pieceValues[piece.Role] * piece.Health;
                 }
             }
 
@@ -321,7 +302,7 @@ namespace Algorithms
             var result = new List<DirectionArrow>();
 
             var currentPlayer = (PlayerSide)(((int)_originalPlayer + arrowsSoFar.Count - 1) % 2) + 1;
-            var sideToEvaluate = _simulatedBoard.GetPiecesForPlayer(currentPlayer);
+            var sideToEvaluate = _simulatedBoard.GetReadyPiecesForPlayer(currentPlayer);
             if (sideToEvaluate == null || sideToEvaluate.Count == 0)
             {
                 //Debug.Log($"GetAvailableArrows - no pieces for {currentPlayer}");

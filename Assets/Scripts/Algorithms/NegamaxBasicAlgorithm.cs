@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Enums;
+using Infrastructure;
 using Models;
 using UnityEngine;
 
@@ -9,15 +10,18 @@ namespace Algorithms
     // Negamax without Alpha-Beta pruning
     public class NegamaxBasicAlgorithm : IAlgorithm
     {
-        private Dictionary<UnitRole, int> _pieceValues = new Dictionary<UnitRole, int>(){
-        { UnitRole.Unknown, 0 },
-        { UnitRole.Pawn, 1 },
-        { UnitRole.Bishop, 3 },
-        { UnitRole.Knight, 3 },
-        { UnitRole.Rook, 5 },
-        { UnitRole.Queen, 8 },
-        { UnitRole.King, 1000 },
-    };
+        private Dictionary<UnitRole, int> _pieceValues = new Dictionary<UnitRole, int>()
+        {
+            { UnitRole.Unknown, 0 },
+            { UnitRole.Pawn, 2 },
+            { UnitRole.Bishop, 3 },
+            { UnitRole.Knight, 3 },
+            { UnitRole.Rook, 5 },
+            { UnitRole.Queen, 8 },
+            { UnitRole.King, 1000 },
+        };
+
+        private const int QuiscenceSearchMaxDepth = 1;
 
         private PlayerSide _originalPlayer;
         // private Chessman[,] _board;
@@ -29,7 +33,7 @@ namespace Algorithms
         private int _maxDepth;
 
         private int _bestEvaluation;
-        private PossibleMove _bestMove;
+        private DirectionArrow _bestArrow;
 
 
         public DirectionArrow CalculateNextMove(
@@ -45,7 +49,7 @@ namespace Algorithms
             var boardSizeY = board.Positions.GetLength(1);
             _simulatedBoard = new Board();
             _bestEvaluation = int.MinValue;
-            _bestMove = null;
+            _bestArrow = null;
             _isGameOver = false;
 
             for (int y = 0; y < boardSizeY; y++)
@@ -55,149 +59,193 @@ namespace Algorithms
                     var chessPiece = board.GetPosition(x, y);
                     if (chessPiece != null)
                     {
-                        _simulatedBoard.SetPosition(new Chessman(chessPiece, _simulatedBoard), x, y);
+                        if (chessPiece.Role != UnitRole.Wall)
+                        {
+                            _simulatedBoard.SetPosition(new Chessman(chessPiece, _simulatedBoard), x, y);
+                        }
+                        else
+                        {
+                            _simulatedBoard.SetPosition(new Wall() { XBoard = x, YBoard = y, Board = _simulatedBoard }, x, y);
+                        }
                     }
                 }
             }
+            Debug.Log("Board:");
 
-            Debug.Log("Starting NegaMax");
+            Debug.Log(_simulatedBoard.ToString());
 
-            NegaMax(new List<PossibleMove>());
+            Debug.Log("Starting NegaMax (basic)");
 
-            if (_bestMove == null)
+            NegaMax(new List<DirectionArrow>());
+
+            Debug.Log("Finished NegaMax (basic)");
+
+            if (_bestArrow == null)
             {
                 Debug.Log("No best move found");
+                return null;
             }
 
-            //Debug.Log($"Best Move - ");
+            var pieceToMove = board.GetPosition(_bestArrow.Move.Start.X, _bestArrow.Move.Start.Y);
+            Chessman pieceToAttack = null;
+            if (_bestArrow.Move.AttackedChessPiece != null)
+            {
+                pieceToAttack = board.GetPosition(_bestArrow.Move.AttackedChessPiece.XBoard, _bestArrow.Move.AttackedChessPiece.YBoard) as Chessman;
+            }
 
-            var pieceToMove = board.GetPosition(_bestMove.Start.X, _bestMove.Start.Y);
-            var pieceToRemove = board.GetPosition(_bestMove.End.X, _bestMove.End.Y);
 
+            List<(IChessPiece target, UnitVisibility visibility)> targets = new List<(IChessPiece target, UnitVisibility visibility)>();
+            foreach (var target in _bestArrow.Move.Targets)
+            {
+                var targetTranslated = board.GetPosition(target.PossibleTarget.XBoard, target.PossibleTarget.YBoard) as Chessman;
+                targets.Add((targetTranslated, target.Visibility));
+            }
 
-            PossibleMove translatedBestMove;
-            // if (pieceToRemove != null)
-            // {
-            //     Debug.Log($"Best Move - {_bestMove.ChessPiece.Role} - {_bestMove.Start.X}, {_bestMove.Start.Y} to {_bestMove.End.X}, {_bestMove.End.Y} - Removed piece {_bestMove.RemovedChessPiece.Role}");
-            //     translatedBestMove = new PossibleMove(pieceToMove, pieceToRemove);
-            // }
-            // else
-            // {
-            // Debug.Log($"Best Move - {_bestMove.ChessPiece.Role} - {_bestMove.Start.X}, {_bestMove.Start.Y} to {_bestMove.End.X}, {_bestMove.End.Y}");
-            // translatedBestMove = new PossibleMove(pieceToMove, _bestMove.End.X, _bestMove.End.Y, new List<ChessPieceDirection>(_bestMove.Directions));
-            // //}
+            DirectionArrow translatedBestMove = new DirectionArrow(
+                _bestArrow.Direction,
+                _bestArrow.Depth,
+                pieceToMove as Chessman,
+                _bestArrow.Move.Start.X,
+                _bestArrow.Move.Start.Y,
+                _bestArrow.Move.End.X,
+                _bestArrow.Move.End.Y,
+                _bestArrow.Move.Directions,
+                targets,
+                pieceToAttack,
+                _bestArrow.Move.AttackedChessPieceHealthLost
+            );
 
-            //return translatedBestMove;
+            Debug.Log($"Best Move - {translatedBestMove.Move.ChessPiece.Role} - {translatedBestMove.Move.Start.X}, {translatedBestMove.Move.Start.Y} " +
+            $"to {translatedBestMove.Move.End.X}, {translatedBestMove.Move.End.Y} - Attacked piece {translatedBestMove.Move.AttackedChessPiece?.Role}");
+            Debug.Log($"Best evaluation - {_bestEvaluation}");
 
-            return null;
+            return translatedBestMove;
+
+            //return null;
         }
 
-        private void NegaMax(List<PossibleMove> movesSoFar)
+        private void NegaMax(List<DirectionArrow> arrowsSoFar)
         {
-            var currentPlayer = (PlayerSide)(((int)_originalPlayer + movesSoFar.Count) % 2);
+            var currentPlayer = arrowsSoFar.Last().Move.ChessPiece.Player.GetOpposingPlayer();
 
-            if (movesSoFar.Count >= _maxDepth || _isGameOver)
+            if (arrowsSoFar.Count >= _maxDepth || _isGameOver)
             {
-                var evaluationResult = Evaluate(movesSoFar);
+                var evaluationResult = Evaluate(arrowsSoFar);
                 if (evaluationResult > _bestEvaluation)
                 {
                     //Debug.Log($"Evaluation: {evaluationResult}");
                     _bestEvaluation = evaluationResult;
-                    _bestMove = new PossibleMove(movesSoFar.First());
+                    _bestArrow = new DirectionArrow(arrowsSoFar.First());
                 }
 
                 return;
             }
+            var possibleArrows = GetAvailableArrows(arrowsSoFar);
 
-            //Debug.Log($"Depth: {movesSoFar.Count} - Side: {currentPlayer.ToString()}");
-
-            var listOfChesspieces = _simulatedBoard.Positions.Cast<Chessman>();
-            var sideToEvaluate = listOfChesspieces.Where(x => x != null && x.Player == currentPlayer && x.IsRemoved == false).ToList();
-
-            if (sideToEvaluate == null)
-            {
-                //Debug.Log("Nothing to evaluate");
-                return;
-            }
+            Debug.Log($"NegaMax - Possible moves: {possibleArrows.Count}");
 
             //Debug.Log("Pieces to evaluate: " + sideToEvaluate.Count());
 
-            foreach (var piece in sideToEvaluate)
+            foreach (var arrow in possibleArrows)
             {
-                var possibleMoves = piece.GetPossibleMoves();
+                var moves = new List<(IChessPiece PossibleTarget, UnitVisibility Visibility)>(arrow.Move.Targets)
+                {
+                    (null, UnitVisibility.NotVisible)
+                };
 
                 //Debug.Log($"Evaluating piece {piece.Role.ToString()} - possible moves: {possibleMoves.Count}");
 
-                foreach (var move in possibleMoves)
+                foreach (var target in moves)
                 {
-                    MakeMove(move);
-                    movesSoFar.Add(move);
+                    MakeMove(arrow, target.PossibleTarget);
+                    arrowsSoFar.Add(arrow);
 
                     //Debug.Log($"Added move {movesSoFar.Count}");
 
-                    NegaMax(movesSoFar);
+                    NegaMax(arrowsSoFar);
 
                     //if (_bestMove != null) return;
 
-                    movesSoFar.RemoveAt(movesSoFar.Count - 1);
-                    UndoMove(move);
+                    arrowsSoFar.RemoveAt(arrowsSoFar.Count - 1);
+                    UndoMove(arrow);
 
                     //Debug.Log($"Undoing move {movesSoFar.Count}");
                 }
             }
         }
 
-        private int Evaluate(IEnumerable<PossibleMove> moves)
+        private int Evaluate(IEnumerable<DirectionArrow> arrows)
         {
             var result = 0;
+            var playerToEvaluateFor = arrows.Last().Move.ChessPiece.Player.GetOpposingPlayer();
 
-            foreach (var move in moves)
+            foreach (var piece in _simulatedBoard.GetAllPieces())
             {
-                var chesspieceRole = UnitRole.Unknown;
-                if (move.AttackedChessPiece != null)
+                if (piece.Player == playerToEvaluateFor)
                 {
-                    chesspieceRole = move.AttackedChessPiece.Role;
+                    result += _pieceValues[piece.Role] * piece.Health;
                 }
-
-                var modifier = (move.ChessPiece.Player == _originalPlayer) ? 1 : -1;
-                result += modifier * _pieceValues[chesspieceRole];
+                else
+                {
+                    result -= _pieceValues[piece.Role] * piece.Health;
+                }
             }
+
+            //Debug.Log("Evaluate");
 
             return result;
         }
 
 
-        private void MakeMove(PossibleMove move)
+        private void MakeMove(DirectionArrow arrow, IChessPiece target = null)
         {
-            if (move.AttackedChessPiece != null && move.AttackedChessPiece.Role == UnitRole.King)
+            _simulatedBoard.MoveChessPiece(arrow.Move, arrow.Direction);
+
+            if (target != null)
+            {
+                _simulatedBoard.PerformAttack(arrow.Move, target);
+            }
+
+            if (_simulatedBoard.GetPiecesForPlayer(arrow.Move.ChessPiece.Player.GetOpposingPlayer()).Count == 0)
             {
                 _isGameOver = true;
             }
-
-            //_simulatedBoard.MoveChessPiece(move);
         }
 
-        private void UndoMove(PossibleMove move)
+        private void UndoMove(DirectionArrow arrow)
         {
-            if (move.AttackedChessPiece != null && move.AttackedChessPiece.Role == UnitRole.King)
+            _simulatedBoard.UndoMove(arrow.Move);
+
+            if (_simulatedBoard.GetPiecesForPlayer(arrow.Move.ChessPiece.Player.GetOpposingPlayer()).Count != 0)
             {
                 _isGameOver = false;
             }
-
-            _simulatedBoard.UndoMove(move);
         }
 
-        // private List<PossibleMove> GetAvailableMoves(IEnumerable<Chessman> chessPieces)
-        // {
-        //     var result = new List<PossibleMove>();
+        private List<DirectionArrow> GetAvailableArrows(List<DirectionArrow> arrowsSoFar)
+        {
+            var result = new List<DirectionArrow>();
 
-        //     foreach (var piece in chessPieces)
-        //     {
-        //         var possibleMoves = piece.GetPossibleMoves();
-        //         result.AddRange(possibleMoves);
-        //     }
+            var currentPlayer = (PlayerSide)(((int)_originalPlayer + arrowsSoFar.Count - 1) % 2) + 1;
+            var sideToEvaluate = _simulatedBoard.GetPiecesForPlayer(currentPlayer);
+            if (sideToEvaluate == null || sideToEvaluate.Count == 0)
+            {
+                //Debug.Log($"GetAvailableArrows - no pieces for {currentPlayer}");
+                return result;
+            }
 
-        //     return result;
-        // }
+            foreach (var piece in sideToEvaluate)
+            {
+                var possibleMoves = piece.GetPossibleMoves();
+                //Debug.Log($"GetAvailableArrows - moves: {possibleMoves.Count}");
+                foreach (var move in possibleMoves)
+                {
+                    //Debug.Log($"GetAvailableArrows - move.Directions: {move.Directions.Count}");
+                    result.AddRange(move.Directions);
+                }
+            }
+
+            return result;
+        }
     }
 }

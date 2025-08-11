@@ -39,7 +39,7 @@ namespace Components
                 Player = player,
                 Role = InitializeChessPieceRole(),
                 Board = board,
-                Direction = (player == PlayerSide.Orange) ? UnitDirection.Up : UnitDirection.Down,
+                Direction = (player == PlayerSide.Orange) ? UnitDirection.Right : UnitDirection.Left,
             };
 
             PieceInfo.SetPieceStats();
@@ -73,7 +73,9 @@ namespace Components
 
             if (!game.IsGameOver
                 && game.CurrentPlayer == PieceInfo.Player
-                && (PieceInfo.Role != UnitRole.Wall || PieceInfo.Role != UnitRole.Unknown))
+                && (PieceInfo.Role != UnitRole.Wall || PieceInfo.Role != UnitRole.Unknown)
+                && PieceInfo.IsReady
+                && PieceInfo.IsRemoved == false)
             {
                 game.HighlightedPiece = this;
 
@@ -138,6 +140,7 @@ namespace Components
             {
                 var blackPieceEquivalent = "black_" + PieceInfo.Role.ToString().ToLower();
                 this.GetComponent<SpriteRenderer>().sprite = SpriteLibrary.SelectSprite(blackPieceEquivalent);
+                text.alpha = 0;
             }
         }
 
@@ -154,6 +157,20 @@ namespace Components
             // Don't rotate the attached colored MovePlate
             _movePlateColored.transform.rotation = Quaternion.identity;
             _healthIndicatorCanvas.transform.rotation = Quaternion.identity;
+        }
+
+        public virtual void UpdateReadyColor()
+        {
+            var plate = _movePlateColored.GetComponent<MovePlate>();
+
+            if (PieceInfo.IsReady)
+            {
+                plate.SwapColor(plate.ColorBase);
+            }
+            else
+            {
+                plate.SwapColor(plate.ColorDark);
+            }
         }
 
         #endregion
