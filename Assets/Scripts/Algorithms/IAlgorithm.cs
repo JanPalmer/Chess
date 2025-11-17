@@ -8,6 +8,7 @@ namespace Algorithms
         public DirectionArrow CalculateNextMove(
             PlayerSide player,
             Board board,
-            int maxDepth);
+            int maxDepth,
+            DirectionArrow lastMove = null);
     }
 }

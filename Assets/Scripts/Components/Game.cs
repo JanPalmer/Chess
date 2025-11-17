@@ -89,10 +89,11 @@ namespace Components
             // };
 
             _chessPieces = new List<GameObject>{
-                CreateChesspiece("white_rook", PlayerSide.Orange, 1, 6),  CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 4),
-                CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 2),
+                CreateChesspiece("white_rook", PlayerSide.Orange, 1, 6),  //CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 4),
+                //CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 2),
 
-                CreateChesspiece("white_rook", PlayerSide.Blue, 14, 6),  CreateChesspiece("white_pawn", PlayerSide.Blue, 14, 4),
+                CreateChesspiece("white_rook", PlayerSide.Blue, 14, 6),
+                CreateChesspiece("white_pawn", PlayerSide.Blue, 14, 4),
                 CreateChesspiece("white_pawn", PlayerSide.Blue, 14, 2),
 
                 CreateWall(4, 2), CreateWall(4, 1), CreateWall(5, 1), // lower left corner
@@ -117,7 +118,9 @@ namespace Components
             //     Board.SetPosition(piece);
             // }
 
-            _opponentAlgorithm = new NegamaxAlgorithm();
+            //_opponentAlgorithm = new NegamaxAlgorithm();
+            _opponentAlgorithm = new MonteCarloAlgorithm();
+            //_opponentAlgorithm = new NegaScoutAlgorithm();
         }
 
         public GameObject CreateChesspiece(string spriteName, PlayerSide player, int x, int y)
@@ -186,15 +189,19 @@ namespace Components
             {
                 if (_opponentAlgorithm != null)
                 {
-                    var nextArrow = _opponentAlgorithm.CalculateNextMove(CurrentPlayer, _board, TreeSearchDepth);
-                    var pieceObj = GetChesspiece(nextArrow.Move.Start.X, nextArrow.Move.Start.Y).GetComponent<ChessmanComponent>();
-
-                    pieceObj.Move(nextArrow.Move, nextArrow.Direction);
-
-                    if (nextArrow.Move.AttackedChessPiece != null)
+                    await Task.Run(() =>
                     {
-                        PerformAttack(nextArrow.Move, nextArrow.Move.AttackedChessPiece);
-                    }
+                        var nextArrow = _opponentAlgorithm.CalculateNextMove(CurrentPlayer, _board, TreeSearchDepth);
+                        var pieceObj = GetChesspiece(nextArrow.Move.Start.X, nextArrow.Move.Start.Y).GetComponent<ChessmanComponent>();
+
+                        pieceObj.Move(nextArrow.Move, nextArrow.Direction);
+
+                        if (nextArrow.Move.AttackedChessPiece != null)
+                        {
+                            PerformAttack(nextArrow.Move, nextArrow.Move.AttackedChessPiece);
+                        }
+                    });
+
 
                     await Task.Delay(500);
 
@@ -316,6 +323,8 @@ namespace Components
             var chessObject = GetChesspiece(defender.XBoard, defender.YBoard);
             chessObject.GetComponent<ChessmanComponent>().SetHealth();
 
+            move.AttackedChessPiece = (Chessman)chessObject.GetComponent<ChessmanComponent>().PieceInfo;
+
             if (defender.IsRemoved)
             {
                 RemoveChesspiece(chessObject);
@@ -382,6 +391,11 @@ namespace Components
 
             foreach (var target in move.Targets)
             {
+                if (target.PossibleTarget == null)
+                {
+                    continue;
+                }
+
                 MovePlateSpawnAttack(move, target.PossibleTarget, target.Visibility);
 
                 //Debug.Log($"Move plate spawned - {move.End.X}, {move.End.Y}");

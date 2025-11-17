@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Enums;
 using Models;
-using Unity.VisualScripting;
 
 public class DirectionArrow
 {
