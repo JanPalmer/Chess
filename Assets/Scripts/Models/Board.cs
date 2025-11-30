@@ -415,7 +415,7 @@ namespace Models
 
             unitToAttack.Health -= damageDealt;
 
-            Debug.Log($"Damage dealt: {damageDealt}");
+            //Debug.Log($"Damage dealt: {damageDealt}");
 
             // for testing purposes
             //unitToAttack.Health -= unitToAttack.Health;

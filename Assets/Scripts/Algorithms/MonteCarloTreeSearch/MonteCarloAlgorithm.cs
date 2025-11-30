@@ -5,7 +5,6 @@ using Algorithms;
 using Enums;
 using UnityEngine;
 using Models;
-using Codice.CM.Client.Differences;
 
 public class MonteCarloAlgorithm : IAlgorithm
 {
@@ -25,12 +24,14 @@ public class MonteCarloAlgorithm : IAlgorithm
     // private List<Chessman> _playerBlack;
     // private List<Chessman> _playerWhite;
 
+    private const int IterationLimit = 1000;
+
     private Board _originalBoard;
     private bool _isGameOver;
     private int _maxDepth;
     private static System.Random _numberGenerator = new();
 
-    private int _bestEvaluation;
+    private double _bestEvaluation;
     private DirectionArrow _bestArrow;
 
     public DirectionArrow CalculateNextMove(
@@ -69,8 +70,6 @@ public class MonteCarloAlgorithm : IAlgorithm
         Debug.Log($"Best evaluation - {_bestEvaluation}");
 
         return translatedBestMove;
-
-        //return null;
     }
 
     // https://youtu.be/UXW2yZndl7U?si=dFnJnsk-SFnLKz43
@@ -92,9 +91,9 @@ public class MonteCarloAlgorithm : IAlgorithm
         var rootNode = new MonteCarloDirectionArrow(rootMove);
 
         // Tree creation
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < IterationLimit; i++)
         {
-            Debug.Log($"Iteration: {i + 1}");
+            //Debug.Log($"Iteration: {i + 1}");
 
             _isGameOver = false;
 
@@ -115,9 +114,10 @@ public class MonteCarloAlgorithm : IAlgorithm
         var bestChild = rootNode.Children.First();
         foreach (var child in rootNode.Children)
         {
-            if (child.GetUCT() > bestChild.GetUCT())
+            if (child.NumberOfVisits > 0 && child.GetUCT() > bestChild.GetUCT())
             {
                 bestChild = child;
+                _bestEvaluation = bestChild.GetUCT();
             }
         }
 
@@ -208,7 +208,7 @@ public class MonteCarloAlgorithm : IAlgorithm
     // Update all previous/visited nodes of the search tree
     private void Backpropagation(List<MonteCarloDirectionArrow> arrowsSoFar, Board simulatedBoard)
     {
-        var valueAtEndNode = AlgorithmHelpers.Evaluate(simulatedBoard, _pieceValues, arrowsSoFar);
+        var valueAtEndNode = AlgorithmHelpers.Evaluate(simulatedBoard, _pieceValues, arrowsSoFar, _originalPlayer);
         foreach (var arrow in arrowsSoFar)
         {
             arrow.NumberOfVisits += 1;

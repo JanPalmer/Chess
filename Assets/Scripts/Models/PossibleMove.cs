@@ -74,8 +74,10 @@ namespace Models
         {
             ChessPiece = chessPiece;
             StartingDirection = chessPiece.Direction;
-            Start = (chessPiece.XBoard, chessPiece.YBoard);
-            End = (xEnd, yEnd);
+            Start.X = chessPiece.XBoard;
+            Start.Y = chessPiece.YBoard;
+            End.X = xEnd;
+            End.Y = yEnd;
             Directions = CreateDirectionArrows(directions);
         }
 
@@ -83,8 +85,10 @@ namespace Models
         {
             ChessPiece = chessPiece;
             StartingDirection = chessPiece.Direction;
-            Start = (xStart, yStart);
-            End = (xEnd, yEnd);
+            Start.X = xStart;
+            Start.Y = yStart;
+            End.X = xEnd;
+            End.Y = yEnd;
             Directions = CreateDirectionArrows(directions);
         }
 
@@ -101,8 +105,10 @@ namespace Models
         {
             ChessPiece = chessPiece;
             StartingDirection = chessPiece.Direction;
-            Start = (xStart, yStart);
-            End = (xEnd, yEnd);
+            Start.X = xStart;
+            Start.Y = yStart;
+            End.X = xEnd;
+            End.Y = yEnd;
             Targets = targets;
             Directions = CopyDirectionArrows(directions);
             AttackedChessPiece = attackedChessPiece;

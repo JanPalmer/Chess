@@ -8,6 +8,7 @@ using Infrastructure;
 using Models;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Analytics;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -23,7 +24,7 @@ namespace Components
         public GameObject MovePlateBlue;
         public GameObject DirectionArrow;
 
-        private const int TreeSearchDepth = 2;
+        private const int TreeSearchDepth = 4;
 
         // Positions and team for each chess piece
         //private GameObject[,] positions = new GameObject[8, 8];
@@ -101,11 +102,13 @@ namespace Components
                 CreateWall(10, 8), CreateWall(11, 8), CreateWall(11, 7), // upper right corner
                 CreateWall(11, 1), CreateWall(12, 1), CreateWall(12, 2), // lower right corner
                 
-                CreateWall(7, 7), CreateWall(8, 7), CreateWall(6, 6), CreateWall(7, 6),
+                CreateWall(7, 7), //CreateWall(8, 7),
+                CreateWall(6, 6), CreateWall(7, 6),
                 CreateWall(5, 5), CreateWall(6, 5), CreateWall(6, 4),
 
                 CreateWall(9,5), CreateWall(9, 4), CreateWall(10, 4), CreateWall(8, 3),
-                CreateWall(9, 3), CreateWall(7, 2), CreateWall(8, 2),
+                CreateWall(9, 3), //CreateWall(7, 2), 
+                CreateWall(8, 2),
             };
 
             // foreach (var piece in playerWhite)
@@ -189,19 +192,22 @@ namespace Components
             {
                 if (_opponentAlgorithm != null)
                 {
+                    DirectionArrow nextArrow = null;
+
                     await Task.Run(() =>
                     {
-                        var nextArrow = _opponentAlgorithm.CalculateNextMove(CurrentPlayer, _board, TreeSearchDepth);
-                        var pieceObj = GetChesspiece(nextArrow.Move.Start.X, nextArrow.Move.Start.Y).GetComponent<ChessmanComponent>();
-
-                        pieceObj.Move(nextArrow.Move, nextArrow.Direction);
-
-                        if (nextArrow.Move.AttackedChessPiece != null)
-                        {
-                            PerformAttack(nextArrow.Move, nextArrow.Move.AttackedChessPiece);
-                        }
+                        nextArrow = _opponentAlgorithm.CalculateNextMove(CurrentPlayer, _board, TreeSearchDepth);
                     });
 
+                    var pieceObj = GetChesspiece(nextArrow.Move.Start.X, nextArrow.Move.Start.Y);
+                    var pieceChessman = pieceObj.GetComponent<ChessmanComponent>();
+
+                    pieceChessman.Move(nextArrow.Move, nextArrow.Direction);
+
+                    if (nextArrow.Move.AttackedChessPiece != null)
+                    {
+                        PerformAttack(nextArrow.Move, nextArrow.Move.AttackedChessPiece);
+                    }
 
                     await Task.Delay(500);
 
@@ -222,13 +228,26 @@ namespace Components
 
         public GameObject GetChesspiece(int x, int y)
         {
-            return _chessPieces.SingleOrDefault((obj) =>
+            try
             {
-                var component = obj.GetComponent<ChessmanComponent>();
-                var pieceInfo = (Chessman)component.PieceInfo;
-                //Debug.Log("GetChesspiece: " + component.name);
-                return pieceInfo.XBoard == x && pieceInfo.YBoard == y;
-            });
+                return _chessPieces.SingleOrDefault((obj) =>
+                {
+                    var component = obj.GetComponent<ChessmanComponent>();
+                    var pieceInfo = (Chessman)component.PieceInfo;
+                    if (pieceInfo.Player == PlayerSide.NPC)
+                    {
+                        return false;
+                    }
+                    //Debug.Log("GetChesspiece: " + component.name);
+                    return pieceInfo.XBoard == x && pieceInfo.YBoard == y;
+                });
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e.Message);
+            }
+
+            return null;
         }
 
         public void RemoveChesspiece(GameObject chesspiece)
