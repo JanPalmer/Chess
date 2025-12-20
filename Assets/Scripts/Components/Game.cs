@@ -90,25 +90,32 @@ namespace Components
             // };
 
             _chessPieces = new List<GameObject>{
-                CreateChesspiece("white_rook", PlayerSide.Orange, 1, 6),  //CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 4),
-                //CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 2),
+                // CreateChesspiece("white_rook", PlayerSide.Orange, 1, 6),
+                // CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 4),
+                // CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 2),
 
-                CreateChesspiece("white_rook", PlayerSide.Blue, 14, 6),
-                CreateChesspiece("white_pawn", PlayerSide.Blue, 14, 4),
-                CreateChesspiece("white_pawn", PlayerSide.Blue, 14, 2),
+                // CreateChesspiece("white_rook", PlayerSide.Blue, 14, 6),
+                // CreateChesspiece("white_pawn", PlayerSide.Blue, 14, 4),
+                // CreateChesspiece("white_pawn", PlayerSide.Blue, 14, 2),
 
-                CreateWall(4, 2), CreateWall(4, 1), CreateWall(5, 1), // lower left corner
-                CreateWall(3, 8), CreateWall(3, 7), CreateWall(4, 8), // upper left corner
-                CreateWall(10, 8), CreateWall(11, 8), CreateWall(11, 7), // upper right corner
-                CreateWall(11, 1), CreateWall(12, 1), CreateWall(12, 2), // lower right corner
+                // CreateWall(4, 2), CreateWall(4, 1), CreateWall(5, 1), // lower left corner
+                // CreateWall(3, 8), CreateWall(3, 7), CreateWall(4, 8), // upper left corner
+                // CreateWall(10, 8), CreateWall(11, 8), CreateWall(11, 7), // upper right corner
+                // CreateWall(11, 1), CreateWall(12, 1), CreateWall(12, 2), // lower right corner
                 
-                CreateWall(7, 7), //CreateWall(8, 7),
-                CreateWall(6, 6), CreateWall(7, 6),
-                CreateWall(5, 5), CreateWall(6, 5), CreateWall(6, 4),
+                // CreateWall(7, 7), //CreateWall(8, 7),
+                // CreateWall(6, 6), CreateWall(7, 6),
+                // CreateWall(5, 5), CreateWall(6, 5), CreateWall(6, 4),
 
-                CreateWall(9,5), CreateWall(9, 4), CreateWall(10, 4), CreateWall(8, 3),
-                CreateWall(9, 3), //CreateWall(7, 2), 
-                CreateWall(8, 2),
+                // CreateWall(9,5), CreateWall(9, 4), CreateWall(10, 4), CreateWall(8, 3),
+                // CreateWall(9, 3), //CreateWall(7, 2), 
+                // CreateWall(8, 2),
+
+                CreateChesspiece("white_pawn", PlayerSide.Blue, 14, 2),
+                CreateChesspiece("white_rook", PlayerSide.Orange, 3, 6),  
+                //CreateChesspiece("white_pawn", PlayerSide.Orange, 3, 6)
+                //CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 4),
+                //CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 2),
             };
 
             // foreach (var piece in playerWhite)
@@ -121,8 +128,9 @@ namespace Components
             //     Board.SetPosition(piece);
             // }
 
+            //_opponentAlgorithm = new NegamaxBasicAlgorithm();
             //_opponentAlgorithm = new NegamaxAlgorithm();
-            _opponentAlgorithm = new MonteCarloAlgorithm();
+            //_opponentAlgorithm = new MonteCarloAlgorithm();
             //_opponentAlgorithm = new NegaScoutAlgorithm();
         }
 

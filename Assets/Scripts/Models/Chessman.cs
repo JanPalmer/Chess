@@ -218,41 +218,58 @@ namespace Models
         {
             var baseMoves = SingleMovePattern(XBoard, YBoard, Direction);
             var resultArrows = new List<DirectionArrow>();
+            var resultMoves = new List<PossibleMove>();
 
             var directions = baseMoves.SelectMany(x => x.Directions).ToList();
 
-            resultArrows.AddRange(directions);
-
-            foreach (var direction in directions)
+            foreach (var move in baseMoves)
             {
-                //Debug.Log($"Direction - {direction.Move.End.X}, {direction.Move.End.Y}, {direction.Direction}");
-
-                var nextDepthMoves = SingleMovePattern(direction.Move.End.X, direction.Move.End.Y, direction.Direction);
-                var nextDepthDirections = nextDepthMoves.SelectMany(x => x.Directions).ToList();
-                foreach (var arrow in nextDepthDirections)
-                {
-                    //Debug.Log($"Next Depth Direction - {arrow.Move.End.X}, {arrow.Move.End.Y}, {arrow.Direction}");
-                    var possibleSameMove = directions.FirstOrDefault(x => x.Move.End.X == arrow.Move.End.X && x.Move.End.Y == arrow.Move.End.Y);
-                    if (possibleSameMove != null)
-                    {
-                        if (possibleSameMove.Move.Directions.Select(x => x.Direction == arrow.Direction) != null)
-                        {
-                            continue;
-                        }
-                        arrow.Move = possibleSameMove.Move;
-                        possibleSameMove.Move.Directions.Add(arrow);
-                    }
-                    else
-                    {
-                    }
-
-                    resultArrows.Add(arrow);
-                    arrow.Move.PrecedingMoves.Add(direction);
-                    arrow.Depth = 2;
-                }
+                resultMoves.Add(new PossibleMove(move));
             }
 
-            var resultMoves = resultArrows.Select(x => x.Move).ToList();
+            foreach (var baseMove in baseMoves)
+            {
+                foreach (var baseDirection in baseMove.Directions)
+                {
+                    var nextDepthMoves = SingleMovePattern(baseDirection.Move.End.X, baseDirection.Move.End.Y, baseDirection.Direction);
+                    foreach (var newMove in nextDepthMoves)
+                    {
+                        var possibleSameBaseMove = resultMoves.FirstOrDefault(x => x.End.X == newMove.End.X && x.End.Y == newMove.End.Y);
+
+                        var possibleSameBaseMoves = resultMoves.Select(x => x.End.X == newMove.End.X && x.End.Y == newMove.End.Y);
+                        if (possibleSameBaseMoves.Count() > 1)
+                        {
+                            Debug.Log("");
+                        }
+
+                        if (possibleSameBaseMove != null)
+                        {
+                            foreach (var newDirection in newMove.Directions)
+                            {
+                                var duplicate = possibleSameBaseMove.Directions.Find(x => x.Direction == newDirection.Direction);
+                                if (duplicate != null)
+                                {
+                                    continue;
+                                }
+
+                                newDirection.Move.PrecedingMoves.Add(baseDirection);
+                                newDirection.Depth = 2;
+                                possibleSameBaseMove.Directions.Add(newDirection);
+                            }
+                        }
+                        else
+                        {
+                            foreach (var newDirection in newMove.Directions)
+                            {
+                                newDirection.Move.PrecedingMoves.Add(baseDirection);
+                                newDirection.Depth = 2;
+                            }
+                            resultMoves.Add(newMove);
+                        }
+                    }
+                }
+
+            }
 
             return resultMoves;
         }

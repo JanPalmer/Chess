@@ -61,7 +61,7 @@ namespace Models
             End = (moveToCopy.End.X, moveToCopy.End.Y);
             AttackedChessPiece = moveToCopy.AttackedChessPiece;
             AttackedChessPieceHealthLost = moveToCopy.AttackedChessPieceHealthLost;
-            Targets = new List<(IChessPiece PossibleTarget, UnitVisibility Visibility)>(moveToCopy.Targets);
+            Targets = moveToCopy.Targets != null ? new List<(IChessPiece PossibleTarget, UnitVisibility Visibility)>(moveToCopy.Targets) : new List<(IChessPiece PossibleTarget, UnitVisibility Visibility)>();
             Directions = CopyDirectionArrows(moveToCopy.Directions);
 
             // if (Targets == null || Targets.Count == 0)

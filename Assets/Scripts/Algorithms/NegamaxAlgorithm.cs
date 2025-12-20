@@ -162,7 +162,8 @@ namespace Algorithms
 
             foreach (var arrow in possibleArrows)
             {
-                var moves = new List<(IChessPiece PossibleTarget, UnitVisibility Visibility)>(arrow.Move.Targets);
+                // Only check moves that could result in danger
+                var moves = new List<(IChessPiece PossibleTarget, UnitVisibility Visibility)>(arrow.Move.Targets.Where(x => x.PossibleTarget != null));
 
                 foreach (var target in moves)
                 {

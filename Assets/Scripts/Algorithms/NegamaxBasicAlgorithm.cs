@@ -33,6 +33,8 @@ namespace Algorithms
         private int _bestEvaluation;
         private DirectionArrow _bestArrow;
 
+        private int _nodesTotal = 0;
+
 
         public DirectionArrow CalculateNextMove(
             PlayerSide player,
@@ -69,6 +71,7 @@ namespace Algorithms
             Debug.Log($"Best Move - {translatedBestMove.Move.ChessPiece.Role} - {translatedBestMove.Move.Start.X}, {translatedBestMove.Move.Start.Y} " +
             $"to {translatedBestMove.Move.End.X}, {translatedBestMove.Move.End.Y} - Attacked piece {translatedBestMove.Move.AttackedChessPiece?.Role}");
             Debug.Log($"Best evaluation - {_bestEvaluation}");
+            Debug.Log($"Nodes searched: {_nodesTotal}");
 
             return translatedBestMove;
 
@@ -93,7 +96,9 @@ namespace Algorithms
             }
             var possibleArrows = AlgorithmHelpers.GetAvailableArrows(_originalPlayer, _simulatedBoard, arrowsSoFar);
 
-            Debug.Log($"NegaMax - Possible moves: {possibleArrows.Count}");
+            _nodesTotal += possibleArrows.Count;
+
+            //Debug.Log($"NegaMax - Possible moves: {possibleArrows.Count}");
 
             //Debug.Log("Pieces to evaluate: " + sideToEvaluate.Count());
 
