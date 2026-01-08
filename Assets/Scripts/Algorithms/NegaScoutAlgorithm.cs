@@ -37,8 +37,7 @@ namespace Algorithms
         public DirectionArrow CalculateNextMove(
             PlayerSide player,
             Board board,
-            int maxDepth = 2,
-            DirectionArrow lastMove = null)
+            int maxDepth = 3)
         {
             _originalPlayer = player;
             _maxDepth = maxDepth;

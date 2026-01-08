@@ -1,4 +1,5 @@
 using System.Collections;
+using Infrastructure;
 using Models;
 using UnityEngine;
 
@@ -50,12 +51,21 @@ namespace Components
             if (Target != null)
             {
                 // Change to red color, based on visibility
-                this.GetComponent<SpriteRenderer>().color = TargetVisibility switch
+                var movePlateColor = TargetVisibility switch
                 {
                     UnitVisibility.FullyVisible => new Color(1.0f, 0, 0), // vibrant red                    
                     UnitVisibility.InCover => new Color(0.6f, 0, 0), // darker shade of red
                     _ => new Color(0, 0, 0),
                 };
+
+                if(target != null && DirectionConverter.IsAttackingSide(move.ChessPiece, (Chessman)target))
+                {
+                    Debug.Log("IsAttackingSide - true");
+                    movePlateColor.g = 0.45f;
+                    movePlateColor.b = 0.45f;
+                }
+
+                this.GetComponent<SpriteRenderer>().color = movePlateColor;
             }
 
             //Debug.Log($"MovePlate-Activate(): Target {Target.XBoard}, {Target.YBoard}, Visibility: {TargetVisibility}");

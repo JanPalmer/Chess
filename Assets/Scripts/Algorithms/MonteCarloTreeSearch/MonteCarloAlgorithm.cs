@@ -37,8 +37,7 @@ public class MonteCarloAlgorithm : IAlgorithm
     public DirectionArrow CalculateNextMove(
         PlayerSide player,
         Board board,
-        int maxDepth = 5,
-        DirectionArrow lastMove = null)
+        int maxDepth = 5)
     {
         _originalPlayer = player;
         _maxDepth = maxDepth;

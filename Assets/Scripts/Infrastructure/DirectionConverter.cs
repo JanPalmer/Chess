@@ -112,15 +112,24 @@ namespace Infrastructure
 
             directions = directions[1..directionsLength]; // Cut out 'Unknown' direction
 
+            var up = _directionToVector2[UnitDirection.Up];
+            var vectorUp = new Vector2(up.X, up.Y);
             var attackerPosition = new Vector2(attacker.XBoard, attacker.YBoard);
             var defenderPosition = new Vector2(defender.XBoard, defender.YBoard);
-            float angle = Vector2.SignedAngle(defenderPosition, attackerPosition);
+            defenderPosition = attackerPosition - defenderPosition;
+            float angle = Vector2.SignedAngle(defenderPosition.normalized, vectorUp);
+            if(angle < 0)
+            {
+                angle += 360;
+            }
 
             // Calculate the front 90 degree directions 
             int factor = 45;
             int attackDirection = (int)Math.Round(angle / (double)factor) % directionsLength;
             int defenderDirection = Array.IndexOf(directions, defender.Direction);
             var defenderFront = new int[] { (defenderDirection - 1) % directionsLength, defenderDirection, (defenderDirection + 1) % directionsLength };
+
+            Debug.Log($"Attack direction: {attackDirection}");
 
             return !defenderFront.Contains(attackDirection);
         }

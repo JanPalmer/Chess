@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Components;
 using Enums;
 using Infrastructure;
@@ -168,6 +169,11 @@ namespace Models
 
             Board.GetPossibleTargets(moves);
 
+            if(moves.Count(x => x.Targets == null) > 0)
+            {
+                Debug.Log("Error - no targets");
+            }
+
             return moves;
         }
 
@@ -236,9 +242,14 @@ namespace Models
                     {
                         var possibleSameBaseMove = resultMoves.FirstOrDefault(x => x.End.X == newMove.End.X && x.End.Y == newMove.End.Y);
 
-                        var possibleSameBaseMoves = resultMoves.Select(x => x.End.X == newMove.End.X && x.End.Y == newMove.End.Y);
+                        var possibleSameBaseMoves = resultMoves.Where(x => x.End.X == newMove.End.X && x.End.Y == newMove.End.Y).ToList();
                         if (possibleSameBaseMoves.Count() > 1)
                         {
+                            // string debugString = "";
+                            // foreach(var move in possibleSameBaseMoves)
+                            // {
+                            //     debugString += m
+                            // }
                             Debug.Log("");
                         }
 
@@ -252,8 +263,9 @@ namespace Models
                                     continue;
                                 }
 
-                                newDirection.Move.PrecedingMoves.Add(baseDirection);
+                                //newDirection.Move.PrecedingMoves.Add(baseDirection);
                                 newDirection.Depth = 2;
+                                newDirection.Move = possibleSameBaseMove;
                                 possibleSameBaseMove.Directions.Add(newDirection);
                             }
                         }

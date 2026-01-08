@@ -48,7 +48,7 @@ namespace Algorithms
         {
             var result = new List<DirectionArrow>();
 
-            var lastPlayer = originalPlayer;
+            var lastPlayer = originalPlayer.GetOpposingPlayer();
             if (arrowsSoFar.Count() > 0)
             {
                 lastPlayer = arrowsSoFar.Last().Move.ChessPiece.Player;
@@ -80,6 +80,11 @@ namespace Algorithms
                     //Debug.Log($"GetAvailableArrows - move.Directions: {move.Directions.Count}");
                     result.AddRange(move.Directions);
                 }
+            }
+
+            if(result.Count(x => x.Move.Targets == null) > 0)
+            {
+                Debug.Log("Error - no targets");
             }
 
             return result;
@@ -114,6 +119,8 @@ namespace Algorithms
         {
             var result = 0;
             playerToEvaluateFor ??= arrows.Last().Move.ChessPiece.Player.GetOpposingPlayer();
+            //playerToEvaluateFor ??= arrows.First().Move.ChessPiece.Player.GetOpposingPlayer();
+
 
             foreach (var piece in board.GetAllPieces())
             {

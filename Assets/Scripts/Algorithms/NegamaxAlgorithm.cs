@@ -38,8 +38,7 @@ namespace Algorithms
         public DirectionArrow CalculateNextMove(
             PlayerSide player,
             Board board,
-            int maxDepth = 2,
-            DirectionArrow lastMove = null)
+            int maxDepth = 4)
         {
             _originalPlayer = player;
             _maxDepth = maxDepth;
@@ -83,7 +82,7 @@ namespace Algorithms
             if (_isGameOver)
             {
                 //Debug.Log($"NegaMax - gameOver: {_isGameOver}");
-                return AlgorithmHelpers.Evaluate(_simulatedBoard, _pieceValues, arrowsSoFar);
+                return AlgorithmHelpers.Evaluate(_simulatedBoard, _pieceValues, arrowsSoFar, _originalPlayer);
             }
 
             if (arrowsSoFar.Count >= _maxDepth)
@@ -94,6 +93,8 @@ namespace Algorithms
             var possibleArrows = AlgorithmHelpers.GetAvailableArrows(_originalPlayer, _simulatedBoard, arrowsSoFar);
 
             //Debug.Log($"NegaMax - Possible moves: {possibleArrows.Count}");
+
+            int nodeCount = 0;
 
             int bestValueLocal = int.MinValue;
 
@@ -127,6 +128,8 @@ namespace Algorithms
                         // _bestArrow = new DirectionArrow(arrowsSoFar.First());
                     }
 
+                    nodeCount++;
+
                     arrowsSoFar.RemoveAt(arrowsSoFar.Count - 1);
                     AlgorithmHelpers.UndoMove(_simulatedBoard, ref _isGameOver, arrow);
                     //UndoMove(arrow);
@@ -140,12 +143,14 @@ namespace Algorithms
                 }
             }
 
+            Debug.Log($"Nodes checked: " + nodeCount);
+
             return bestValueLocal;
         }
 
         private int QuiscenceSearch(List<DirectionArrow> arrowsSoFar, int alpha, int beta, int quiscenceSearchDepth)
         {
-            var bestValue = AlgorithmHelpers.Evaluate(_simulatedBoard, _pieceValues, arrowsSoFar);
+            var bestValue = AlgorithmHelpers.Evaluate(_simulatedBoard, _pieceValues, arrowsSoFar, _originalPlayer);
 
             if (bestValue >= beta || _isGameOver || quiscenceSearchDepth >= QuiscenceSearchMaxDepth)
             {

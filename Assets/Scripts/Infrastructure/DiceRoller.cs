@@ -20,8 +20,9 @@ namespace Infrastructure
             {
                 //var diceIndex = (int)Math.Round(_numberGenerator.NextDouble() * (AttackDiceSides.Length - 1));
                 //UnityEngine.Debug.Log($"RollCombatDice - diceIndex: {diceIndex}");
-                var diceIndex = 3;
-                result[i] = AttackDiceSides[diceIndex];
+                // var diceIndex = 3;
+                // result[i] = AttackDiceSides[diceIndex];
+                result[i] = 1;
             }
 
             // Sort descending

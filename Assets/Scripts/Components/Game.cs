@@ -8,9 +8,7 @@ using Infrastructure;
 using Models;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Analytics;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 namespace Components
 {
@@ -24,7 +22,7 @@ namespace Components
         public GameObject MovePlateBlue;
         public GameObject DirectionArrow;
 
-        private const int TreeSearchDepth = 4;
+        private const int TreeSearchDepth = 3;
 
         // Positions and team for each chess piece
         //private GameObject[,] positions = new GameObject[8, 8];
@@ -90,32 +88,73 @@ namespace Components
             // };
 
             _chessPieces = new List<GameObject>{
-                // CreateChesspiece("white_rook", PlayerSide.Orange, 1, 6),
+
+                // Mapa 1
+                CreateChesspiece("white_rook", PlayerSide.Orange, 1, 6),
+                CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 4),
+                CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 2),
+
+                CreateChesspiece("white_pawn", PlayerSide.Blue, 14, 6),
+                CreateChesspiece("white_pawn", PlayerSide.Blue, 14, 4),
+                CreateChesspiece("white_rook", PlayerSide.Blue, 14, 2),
+
+                CreateWall(4, 2), CreateWall(4, 1), CreateWall(5, 1), // lower left corner
+                CreateWall(3, 8), CreateWall(3, 7), CreateWall(4, 8), // upper left corner
+                CreateWall(10, 8), CreateWall(11, 8), CreateWall(11, 7), // upper right corner
+                CreateWall(11, 1), CreateWall(12, 1), CreateWall(12, 2), // lower right corner
+
+                CreateWall(7, 7), 
+                CreateWall(6, 6), CreateWall(7, 6),
+                CreateWall(5, 5), CreateWall(6, 5), CreateWall(5, 4),
+
+                CreateWall(10,5), 
+                CreateWall(9, 4), CreateWall(10, 4), CreateWall(8, 3),
+                CreateWall(9, 3), //CreateWall(7, 2), 
+                CreateWall(8, 2),
+
+
+                // Mapa 2
+                // CreateChesspiece("white_rook", PlayerSide.Orange, 1, 8),
+                // CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 6),
                 // CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 4),
-                // CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 2),
+                // CreateChesspiece("white_rook", PlayerSide.Orange, 1, 1),
 
-                // CreateChesspiece("white_rook", PlayerSide.Blue, 14, 6),
+                // CreateChesspiece("white_rook", PlayerSide.Blue, 14, 8),
+                // CreateChesspiece("white_pawn", PlayerSide.Blue, 14, 6),
                 // CreateChesspiece("white_pawn", PlayerSide.Blue, 14, 4),
-                // CreateChesspiece("white_pawn", PlayerSide.Blue, 14, 2),
+                // CreateChesspiece("white_rook", PlayerSide.Blue, 14, 1),
 
-                // CreateWall(4, 2), CreateWall(4, 1), CreateWall(5, 1), // lower left corner
-                // CreateWall(3, 8), CreateWall(3, 7), CreateWall(4, 8), // upper left corner
-                // CreateWall(10, 8), CreateWall(11, 8), CreateWall(11, 7), // upper right corner
-                // CreateWall(11, 1), CreateWall(12, 1), CreateWall(12, 2), // lower right corner
+                // CreateWall(4, 1), CreateWall(3, 0), CreateWall(4, 0), // lower left corner
+                // CreateWall(3, 8), CreateWall(3, 9), CreateWall(4, 9), // upper left corner
+                // CreateWall(11, 9), CreateWall(12, 9), CreateWall(12, 8), // upper right corner
+                // CreateWall(11, 1), CreateWall(11, 0), CreateWall(12, 0), // lower right corner
                 
-                // CreateWall(7, 7), //CreateWall(8, 7),
-                // CreateWall(6, 6), CreateWall(7, 6),
-                // CreateWall(5, 5), CreateWall(6, 5), CreateWall(6, 4),
+                // CreateWall(4, 4), CreateWall(4, 5), // left squiggle
+                // CreateWall(5, 5), CreateWall(5, 6), 
+                // CreateWall(6, 6), CreateWall(6, 7),
 
-                // CreateWall(9,5), CreateWall(9, 4), CreateWall(10, 4), CreateWall(8, 3),
-                // CreateWall(9, 3), //CreateWall(7, 2), 
-                // CreateWall(8, 2),
+                // CreateWall(11, 4), CreateWall(11, 5), // right squiggle
+                // CreateWall(10, 5), CreateWall(10, 6),
+                // CreateWall(9, 6), CreateWall(9, 7),
 
-                CreateChesspiece("white_pawn", PlayerSide.Blue, 14, 2),
-                CreateChesspiece("white_rook", PlayerSide.Orange, 3, 6),  
-                //CreateChesspiece("white_pawn", PlayerSide.Orange, 3, 6)
-                //CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 4),
-                //CreateChesspiece("white_pawn", PlayerSide.Orange, 1, 2),
+                // CreateWall(7, 2), CreateWall(7, 3), // center square
+                // CreateWall(8, 2), CreateWall(8, 3), 
+
+                // CreateChesspiece("white_pawn", PlayerSide.Blue, 8, 5),
+                // //CreateChesspiece("white_rook", PlayerSide.Orange, 3, 6),  
+                // CreateChesspiece("white_pawn", PlayerSide.Orange, 3, 6),
+                // // CreateChesspiece("white_pawn", PlayerSide.Orange, 3, 4),
+                // // CreateChesspiece("white_pawn", PlayerSide.Orange, 3, 2),
+                // CreateChesspiece("white_rook", PlayerSide.Blue, 6, 4),
+                // CreateChesspiece("white_rook", PlayerSide.Blue, 5, 4),
+                // CreateChesspiece("white_rook", PlayerSide.Blue, 4, 4),
+                // CreateChesspiece("white_pawn", PlayerSide.Orange, 5, 6),
+
+                // CreateChesspiece("white_rook", PlayerSide.Blue, 3, 2),
+                // CreateWall(5, 2),
+                // CreateChesspiece("white_rook", PlayerSide.Orange, 6, 2),
+
+                // CreateWall(6, 5)
             };
 
             // foreach (var piece in playerWhite)
@@ -131,7 +170,7 @@ namespace Components
             //_opponentAlgorithm = new NegamaxBasicAlgorithm();
             //_opponentAlgorithm = new NegamaxAlgorithm();
             //_opponentAlgorithm = new MonteCarloAlgorithm();
-            //_opponentAlgorithm = new NegaScoutAlgorithm();
+            _opponentAlgorithm = new NegaScoutAlgorithm();
         }
 
         public GameObject CreateChesspiece(string spriteName, PlayerSide player, int x, int y)
@@ -204,8 +243,10 @@ namespace Components
 
                     await Task.Run(() =>
                     {
-                        nextArrow = _opponentAlgorithm.CalculateNextMove(CurrentPlayer, _board, TreeSearchDepth);
                     });
+
+                    nextArrow = _opponentAlgorithm.CalculateNextMove(CurrentPlayer, _board, TreeSearchDepth);
+
 
                     var pieceObj = GetChesspiece(nextArrow.Move.Start.X, nextArrow.Move.Start.Y);
                     var pieceChessman = pieceObj.GetComponent<ChessmanComponent>();
@@ -331,10 +372,14 @@ namespace Components
                     HighlightedPiece.GetComponent<ChessmanComponent>().UndoMove(HighlightedArrow.Move);
                 }
 
+                //InitiateMovePlates(arrow.Move.ChessPiece);
+
+                //HighlightedPiece.GetComponent<ChessmanComponent>().UndoMove(HighlightedArrow.Move);
                 InitiateMovePlates(arrow.Move.ChessPiece);
-                InitiateMovePlatesAttack(arrow.Move);
+
                 var pieceObj = GetChesspiece(arrow.Move.Start.X, arrow.Move.Start.Y).GetComponent<ChessmanComponent>();
                 pieceObj.Move(arrow.Move, arrow.Direction);
+                InitiateMovePlatesAttack(arrow.Move);
             }
             else
             {
@@ -368,6 +413,8 @@ namespace Components
 
         public void DestroyMovePlates()
         {
+            // Don't destroy those plates 
+
             GameObject[] movePlates = GameObject.FindGameObjectsWithTag("MovePlate");
 
             foreach (var movePlate in movePlates)
@@ -376,6 +423,23 @@ namespace Components
             }
 
             DestroyDirectionArrows();
+        }
+
+        public void DestroyAttackMovePlates()
+        {
+            GameObject[] movePlateObjects = GameObject.FindGameObjectsWithTag("MovePlate");
+
+            foreach (var movePlateObject in movePlateObjects)
+            {
+                var movePlate = movePlateObject.GetComponent<MovePlate>();
+                if(movePlate == null || movePlate.Target == null)
+                {
+                    continue;
+                }
+                Destroy(movePlate);
+            }
+
+            //DestroyDirectionArrows();
         }
 
         public void InitiateMovePlates(IChessPiece piece)
@@ -431,10 +495,10 @@ namespace Components
 
         public MovePlate MovePlateSpawnAttack(PossibleMove move, IChessPiece target = null, UnitVisibility visibility = UnitVisibility.NotVisible)
         {
-            GameObject mp = Instantiate(MovePlate, new Vector3(target.XBoard, target.YBoard, -3.0f), Quaternion.identity);
+            GameObject mp = Instantiate(MovePlate, new Vector3(target.XBoard, target.YBoard, -3.5f), Quaternion.identity);
 
             var newCoordinates = TransformCalculator.CalculateTransform(target.XBoard, target.YBoard);
-            mp.transform.position = new Vector3(newCoordinates.X, newCoordinates.Y, -3.0f);
+            mp.transform.position = new Vector3(newCoordinates.X, newCoordinates.Y, -3.5f);
 
             MovePlate mpScript = mp.GetComponent<MovePlate>();
 

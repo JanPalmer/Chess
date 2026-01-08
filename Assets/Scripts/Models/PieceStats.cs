@@ -9,7 +9,7 @@ namespace Models
         {
             { UnitRole.Unknown, (0, 0, 0, 0) },
             { UnitRole.Pawn, (3, 1, 3, 2) },
-            { UnitRole.Rook, (5, 2, 4, 3) },
+            { UnitRole.Rook, (6, 2, 4, 3) },
         };
 
         private static void SetStats(IChessPiece piece, (int health, int movement, int firepower, int survivability) stats)
